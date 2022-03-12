@@ -1,7 +1,7 @@
 import ASTNode from './ASTNode'
 import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
-import BinaryOpNode, {BinaryOp} from './BinaryOpNode'
+import BinaryOpNode, { BinaryOp } from './BinaryOpNode'
 import ArgListNode from './ArgListNode'
 import CodeBlockNode from './CodeBlockNode'
 import StatementNode from './StatementNode'
@@ -120,7 +120,10 @@ export default class ExpressionNode extends ASTNode {
   static parseFunctionCall = (parser: Parser, left?: ASTNode): ASTNode => {
     left = left || ExpressionNode.parseTerm(parser)
     if (parser.matchToken(TokenType.Parentheses, '(')) {
-      return ExpressionNode.parseFunctionCall(parser, new FunctionCallNode(left, ArgListNode.parse(parser)));
+      parser.acceptToken(TokenType.Parentheses, '(')
+      const argListNode = ArgListNode.parse(parser)
+      parser.acceptToken(TokenType.Parentheses, ')')
+      return ExpressionNode.parseFunctionCall(parser, new FunctionCallNode(left, argListNode));
     } else {
       return left
     }

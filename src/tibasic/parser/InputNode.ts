@@ -4,17 +4,17 @@ import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
 
 export default class InputNode extends ASTNode {
-  constructor(variables: ArgListNode) {
+  constructor(args: ArgListNode) {
     super()
-    this.children.push(variables)
+    this.children.push(args)
   }
 
-  variables = (): ArgListNode => {
+  args = (): ArgListNode => {
     return this.children[0] as ArgListNode
   }
 
   static parse = (parser: Parser): InputNode => {
-    parser.expectToken(TokenType.Identifier, "Input");
-    return new InputNode(ArgListNode.parse(parser));
+    parser.expectToken(TokenType.Identifier, "Input")
+    return new InputNode(ArgListNode.parse(parser))
   }
 }

@@ -1,5 +1,7 @@
 import ASTNode from './ASTNode'
 import { Token, TokenType } from '../lexer/scanner.d'
+import CodeBlockNode from './CodeBlockNode'
+import StatementNode from './StatementNode'
 
 export default class Parser {
   readonly tokens: Array<Token>
@@ -11,7 +13,11 @@ export default class Parser {
   }
 
   parse = (): ASTNode => {
-    return { children: [] }
+    const tree = new CodeBlockNode()
+    while (!this.endOfStream()) {
+      tree.children.push(StatementNode.parse(this))
+    }
+    return tree
   }
 
   endOfStream = (): boolean => {
@@ -19,6 +25,10 @@ export default class Parser {
   }
 
   matchToken = (type: TokenType, value?: string | number): boolean => {
+    if (this.endOfStream()) {
+      return false
+    }
+
     const token = this.tokens[this.position]
     if (value !== undefined) {
       return token.type === type && (token.value as string).toUpperCase() === (value as string).toUpperCase()

@@ -6,7 +6,7 @@ import ExpressionNode from './ExpressionNode'
 export default class ArgListNode extends ASTNode {
   static parse = (parser: Parser): ArgListNode => {
     const node = new ArgListNode()
-    node.children.push()
+    node.children.push(ExpressionNode.parse(parser))
     while (parser.acceptToken(TokenType.Comma)) {
       node.children.push(ExpressionNode.parse(parser))
     }

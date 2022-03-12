@@ -18,8 +18,10 @@ import InputNode from '../parser/InputNode'
 import StandardLibrary from './StandardLibrary'
 import OutputNode from '../parser/OutputNode'
 import ClrHomeNode from '../parser/ClrHomeNode'
+import HomeScreen from '../screen/HomeScreen'
 
 export default class Interpreter {
+  private readonly screen: HomeScreen
   private readonly variables: { [key: string]: any } = {
     'True': true,
     'False': false,
@@ -32,9 +34,11 @@ export default class Interpreter {
 
   private position: number = 0
 
+  // TODO use this for callbacks?
   input: string = ''
 
-  constructor() {
+  constructor(screen: HomeScreen) {
+    this.screen = screen
     this.loadFunctions().forEach((dict) => {
       Object.entries(dict).forEach(([key, value]) => {
         this.variables[key] = value
@@ -105,21 +109,55 @@ export default class Interpreter {
       }
     } else if (node instanceof DispNode) {
       const dispNode = node as DispNode
-      dispNode.children.forEach(childNode => {
-        console.log(String(this.evaluateNode(childNode)))
-        // TODO output to console
+      dispNode.args().children.forEach(argNode => {
+        this.screen.display(this.evaluateNode(argNode))
       })
-      // TODO output "\n" to console
     } else if (node instanceof OutputNode) {
       const outputNode = node as OutputNode
-      // TODO put text to console
+      const body = this.evaluateNode(outputNode.children[0])
+      this.screen.output(outputNode.row, outputNode.col, body)
     } else if (node instanceof ClrHomeNode) {
-      const clrHomeNode = node as ClrHomeNode
-      // TODO clear home screen and reset cursor
+      this.screen.clear()
     } else if (node instanceof InputNode) {
-      // TODO
+      const args = (node as InputNode).args()
+
+      // TODO handle invalid args?
+      let prompt
+      let identifier
+      if (args.children.length === 2) {
+        prompt = String(this.evaluateNode(args.children[0]))
+        identifier = (args.children[1] as IdentifierNode).identifier
+      } else {
+        prompt = '?'
+        identifier = (args.children[0] as IdentifierNode).identifier
+      }
+
+      const value: string | null = window.prompt(prompt, '')
+      if (value === null) {
+        // FIXME crash here?
+        console.error('User cancelled the prompt -- no input received')
+      } else {
+        this.variables[identifier] = value
+      }
     } else if (node instanceof PromptNode) {
-      // TODO
+      const promptNode = node as PromptNode
+      promptNode.variables().children.forEach(varNode => {
+        const identifier = (varNode as IdentifierNode).identifier
+        const value: string | null = window.prompt(`${identifier}=?`, '')
+
+        // TODO parse the input as a program? or something like that for better string handling?
+        if (value === null) {
+          // FIXME crash here?
+          console.error('User cancelled the prompt -- no input received')
+        } else if (!isNaN(Number(value))) {
+          this.variables[identifier] = Number(value)
+        } else if (value.length >= 3 && value.charAt(0) === '"' && value.charAt(value.length - 1) === '"') {
+          this.variables[identifier] = value.substring(1, value.length - 1)
+        } else {
+          // FIXME crash here?
+          console.error(`Received invalid user input: ${value}`)
+        }
+      })
     } else if (node instanceof PrgmNode) {
       // TODO
     } else if (node instanceof LblNode) {
@@ -158,7 +196,7 @@ export default class Interpreter {
         throw new Error(`Identifier '${identifier}' is not defined`)
       }
     } else if (node instanceof BinaryOpNode) {
-      this.interpretBinaryOpNode(node as BinaryOpNode)
+      return this.interpretBinaryOpNode(node as BinaryOpNode)
     } else {
       throw new Error(`Unexpected node in interpreter: ${node}`)
     }
@@ -191,6 +229,7 @@ export default class Interpreter {
       case BinaryOp.Assignment:
         const value = this.evaluateNode(node.left())
         const variable = (node.right() as IdentifierNode).identifier
+        // TODO protect overwriting globals e.g. True / False
         this.variables[variable] = value
         return value
       case BinaryOp.And:

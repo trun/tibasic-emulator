@@ -26,6 +26,10 @@ export default class OutputNode extends ASTNode {
     parser.expectToken(TokenType.Comma)
 
     const expression = ExpressionNode.parse(parser)
+
+    // closing paren is optional?
+    parser.acceptToken(TokenType.Parentheses, ')')
+
     return new OutputNode(row, col, expression)
   }
 }

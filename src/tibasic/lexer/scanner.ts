@@ -29,9 +29,11 @@ export default class Scanner {
 
     const scanString = (): any => {
       let result = ''
+      position++ // skip over opening quote mark
       while (!eof() && peekChar() !== '"') {
         result += readChar()
       }
+      position++ // skip over closing quote mark
 
       return {
         type: TokenType.String,
