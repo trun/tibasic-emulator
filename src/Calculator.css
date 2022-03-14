@@ -11,7 +11,7 @@
 .screen {
   display: grid;
   gap: 2px;
-  width: 478px;
+  width: calc(15 * 2px + 16 * 14px);
   margin-bottom: 10px;
   border: 2px solid #999;
   box-shadow: 2px 2px 2px #999;
@@ -20,20 +20,20 @@
 .screen-cell {
   font-family: "ti-83-plus-large", monospace;
   font-weight: 500;
-  font-size: 24px;
+  font-size: 12px;
   background-color: #fafafa;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 27px;
-  height: 34px;
+  width: 13px;
+  height: 17px;
   padding-top: 1px;
   padding-left: 1px;
 }
 
 .repl {
   display: flex;
-  width: 482px;
+  width: 258px;
   font-family: monospace;
   font-weight: 500;
   font-size: 12px;
