@@ -14,6 +14,7 @@ import InputNode from './InputNode'
 import PromptNode from './PromptNode'
 import ClrHomeNode from './ClrHomeNode'
 import OutputNode from './OutputNode'
+import MenuNode from './MenuNode'
 
 export default class StatementNode extends ASTNode {
   static parse = (parser: Parser): ASTNode => {
@@ -37,6 +38,8 @@ export default class StatementNode extends ASTNode {
       return ClrHomeNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Prgm')) {
       return PrgmNode.parse(parser)
+    } else if (parser.matchToken(TokenType.Identifier, 'Menu')) {
+      return MenuNode.parse(parser)
     } else if (parser.acceptToken(TokenType.Identifier, 'Lbl')) {
       return new LblNode(parser.expectToken(TokenType.Identifier).value as string)
     } else if (parser.acceptToken(TokenType.Identifier, 'Goto')) {
