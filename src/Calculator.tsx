@@ -5,6 +5,7 @@ import Scanner from './tibasic/lexer/scanner'
 import Parser from './tibasic/parser/Parser'
 
 import './Calculator.css'
+import './fonts/ti-83-plus-large.ttf'
 
 const screen = new HomeScreen()
 const interpreter = new Interpreter(screen)
