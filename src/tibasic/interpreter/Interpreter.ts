@@ -33,8 +33,8 @@ export default class Interpreter {
     'e': Math.E,
   }
 
-  private labels: { [key: string]: number } = {}
-  private lines: ASTNode[] = []
+  readonly labels: { [key: string]: number } = {}
+  readonly lines: ASTNode[] = []
   private position: number = 0
 
   private blockStack: number[] = []
@@ -59,7 +59,21 @@ export default class Interpreter {
   }
 
   next = () => {
-    this.executeStatement(this.lines[this.position++])
+    const node = this.lines[this.position]
+    const result = this.runLine(node)
+
+    switch (result.status) {
+      case 'run':
+        this.position++
+        break
+      case 'jump':
+        this.position = this.labels[result.label]
+        break
+      case 'error':
+        console.error(result.message)
+        this.position = this.lines.length
+        break
+    }
   }
 
   hasNext = (): boolean => {
@@ -82,65 +96,65 @@ export default class Interpreter {
   //
   // }
 
-  // private runLine = (node: ASTNode): RunResult => {
-  //   switch (node.type) {
-  //     // Labels
-  //     case 'Lbl':
-  //       return { status: 'run' }
-  //     case 'Goto':
-  //       return { status: 'jump', label: (node as GotoNode).label }
-  //
-  //     // Control Flow
-  //     case 'While':
-  //       const whileNode = node as WhileNode
-  //       const predicate = Boolean(this.evaluateNode(whileNode.predicate))
-  //
-  //       this.blockStack.push(this.position)
-  //       this.blockStackPredicate.push(predicate)
-  //
-  //       return { status: 'run' }
-  //
-  //     case 'End':
-  //       const lastBlockPosition = this.blockStack[this.blockStack.length - 1]
-  //       const lastBlock = this.lines[lastBlockPosition]
-  //
-  //       if (lastBlock.type === 'While') {
-  //
-  //       }
-  //
-  //       const blockStart = this.blockStack
-  //
-  //     // Screen
-  //     case 'Disp':
-  //       const dispNode = node as DispNode
-  //       dispNode.args.arglist.forEach(argNode => {
-  //         this.screen.display(this.evaluateNode(argNode))
-  //       })
-  //       return { status: 'run' }
-  //     case 'Output':
-  //       const outputNode = node as OutputNode
-  //       const body = this.evaluateNode(outputNode.expression)
-  //       this.screen.output(outputNode.row, outputNode.col, body)
-  //       return { status: 'run' }
-  //     case 'ClrHome':
-  //       this.screen.clear()
-  //       return { status: 'run' }
-  //
-  //     // I/O
-  //
-  //     // Expressions
-  //     case 'Number':
-  //     case 'String':
-  //     case 'Identifier':
-  //     case 'BinaryOp':
-  //     case 'FunctionCall':
-  //       const result = this.evaluateNode(node)
-  //       this.variables['Ans'] = result
-  //       return { status: 'run' }
-  //     default:
-  //       return { status: 'error', message: `Unexpected AST node type: ${node.type}` }
-  //   }
-  // }
+  private runLine = (node: ASTNode): RunResult => {
+    switch (node.type) {
+      // Labels
+      case 'Lbl':
+        return { status: 'run' }
+      case 'Goto':
+        return { status: 'jump', label: (node as GotoNode).label }
+
+      // // Control Flow
+      // case 'While':
+      //   const whileNode = node as WhileNode
+      //   const predicate = Boolean(this.evaluateNode(whileNode.predicate))
+      //
+      //   this.blockStack.push(this.position)
+      //   this.blockStackPredicate.push(predicate)
+      //
+      //   return { status: 'run' }
+      //
+      // case 'End':
+      //   const lastBlockPosition = this.blockStack[this.blockStack.length - 1]
+      //   const lastBlock = this.lines[lastBlockPosition]
+      //
+      //   if (lastBlock.type === 'While') {
+      //
+      //   }
+      //
+      //   const blockStart = this.blockStack
+
+      // Screen
+      case 'Disp':
+        const dispNode = node as DispNode
+        dispNode.args.arglist.forEach(argNode => {
+          this.screen.display(this.evaluateNode(argNode))
+        })
+        return { status: 'run' }
+      case 'Output':
+        const outputNode = node as OutputNode
+        const body = this.evaluateNode(outputNode.expression)
+        this.screen.output(outputNode.row, outputNode.col, body)
+        return { status: 'run' }
+      case 'ClrHome':
+        this.screen.clear()
+        return { status: 'run' }
+
+      // I/O
+
+      // Expressions
+      case 'Number':
+      case 'String':
+      case 'Identifier':
+      case 'BinaryOp':
+      case 'FunctionCall':
+        const result = this.evaluateNode(node)
+        this.variables['Ans'] = result
+        return { status: 'run' }
+      default:
+        return { status: 'error', message: `Unexpected AST node type: ${node.type}` }
+    }
+  }
 
   private scanLabels = (lines: ASTNode[]): void => {
     lines.forEach((childNode, position) => {

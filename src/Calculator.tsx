@@ -37,6 +37,14 @@ DISP "YOU PRESSED...", K
 GOTO HOME
 `
 
+const LOOP_PRGM = `
+0 -> X
+LBL HOME
+X + 1 -> X
+DISP "Counter...", X
+GOTO HOME
+`
+
 function Calculator() {
   const [screenText, setScreenText] = useState(screen.getChars())
   const [interpreter, setInterpreter] = useState<Interpreter>()
@@ -45,7 +53,7 @@ function Calculator() {
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(PRINT_KEY_PRGM)
+      const tokens = new Scanner().scan(LOOP_PRGM)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(screen, program))
       setScreenText(screen.getChars())
