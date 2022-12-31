@@ -6,13 +6,14 @@ import ExpressionNode from './ExpressionNode'
 export default class OutputNode extends ASTNode {
   readonly row: number
   readonly col: number
+  readonly expression: ASTNode
 
   constructor(row: number, col: number, expression: ASTNode) {
     super('Output')
 
     this.row = row
     this.col = col
-    this.children.push(expression)
+    this.expression = expression
   }
 
   static parse = (parser: Parser): OutputNode => {

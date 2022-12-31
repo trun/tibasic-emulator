@@ -4,13 +4,12 @@ import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
 
 export default class InputNode extends ASTNode {
+  readonly args: ArgListNode
+
   constructor(args: ArgListNode) {
     super('Input')
-    this.children.push(args)
-  }
 
-  args = (): ArgListNode => {
-    return this.children[0] as ArgListNode
+    this.args = args
   }
 
   static parse = (parser: Parser): InputNode => {

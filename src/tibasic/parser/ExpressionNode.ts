@@ -3,8 +3,6 @@ import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
 import BinaryOpNode, { BinaryOp } from './BinaryOpNode'
 import ArgListNode from './ArgListNode'
-import CodeBlockNode from './CodeBlockNode'
-import StatementNode from './StatementNode'
 import NumberNode from './NumberNode'
 import StringNode from './StringNode'
 import IdentifierNode from './IdentifierNode'
@@ -132,34 +130,10 @@ export default class ExpressionNode extends ASTNode {
   static parseTerm = (parser: Parser): ASTNode => {
     if (parser.matchToken(TokenType.Number)) {
       return new NumberNode(parser.expectToken(TokenType.Number).value as number)
-    } else if (parser.acceptToken(TokenType.Number, '(')) {
+    } else if (parser.acceptToken(TokenType.Parentheses, '(')) {
       const statement = ExpressionNode.parse(parser)
       parser.expectToken(TokenType.Parentheses, ')')
       return statement
-    } else if (parser.matchToken(TokenType.Identifier, 'Then')) {
-      const block = new CodeBlockNode()
-      parser.expectToken(TokenType.Identifier, 'Then')
-      while (!parser.endOfStream() &&
-        !parser.matchToken(TokenType.Identifier, 'EndIf') &&
-        !parser.matchToken(TokenType.Identifier, 'Else')) {
-        block.children.push(StatementNode.parse(parser))
-      }
-      if (parser.matchToken(TokenType.Identifier, 'Else')) {
-        return block
-      }
-      parser.expectToken(TokenType.Identifier, 'EndIf')
-      return block
-    } else if (parser.matchToken(TokenType.Identifier, 'Else')) {
-      parser.expectToken(TokenType.Identifier, 'Else')
-      return StatementNode.parse(parser)
-    } else if (parser.matchToken(TokenType.Identifier, 'Do')) {
-      const block = new CodeBlockNode()
-      parser.expectToken(TokenType.Identifier, 'Do')
-      while (!parser.endOfStream() && !parser.matchToken(TokenType.Identifier, 'End')) {
-        block.children.push(StatementNode.parse(parser))
-      }
-      parser.expectToken(TokenType.Identifier, 'End')
-      return block
     } else if (parser.matchToken(TokenType.String)) {
       return new StringNode(parser.expectToken(TokenType.String).value as string)
     } else if (parser.matchToken(TokenType.Identifier)) {

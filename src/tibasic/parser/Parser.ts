@@ -1,6 +1,5 @@
 import ASTNode from './ASTNode'
 import { Token, TokenType } from '../lexer/scanner.d'
-import CodeBlockNode from './CodeBlockNode'
 import StatementNode from './StatementNode'
 
 export default class Parser {
@@ -12,12 +11,12 @@ export default class Parser {
     this.position = 0
   }
 
-  parse = (): ASTNode => {
-    const tree = new CodeBlockNode()
+  parse = (): ASTNode[] => {
+    const program: ASTNode[] = []
     while (!this.endOfStream()) {
-      tree.children.push(StatementNode.parse(this))
+      program.push(StatementNode.parse(this))
     }
-    return tree
+    return program
   }
 
   endOfStream = (): boolean => {

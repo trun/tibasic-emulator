@@ -23,8 +23,8 @@ export default class BinaryOpNode extends ASTNode {
   readonly left: ASTNode
   readonly right: ASTNode
 
-  constructor(op: BinaryOp, left: ASTNode, right: ASTNode, parent: ASTNode) {
-    super('BinaryOp', parent)
+  constructor(op: BinaryOp, left: ASTNode, right: ASTNode) {
+    super('BinaryOp')
     this.op = op
     this.left = left
     this.right = right

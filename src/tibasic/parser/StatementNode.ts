@@ -1,7 +1,7 @@
 import ASTNode from './ASTNode'
 import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
-import ConditionalNode from './ConditionalNode'
+import IfNode from './IfNode'
 import ExpressionNode from './ExpressionNode'
 import ForNode from './ForNode'
 import GotoNode from './GotoNode'
@@ -16,11 +16,14 @@ import ClrHomeNode from './ClrHomeNode'
 import OutputNode from './OutputNode'
 import MenuNode from './MenuNode'
 import EndNode from './EndNode'
+import ThenNode from './ThenNode'
 
 export default class StatementNode extends ASTNode {
   static parse = (parser: Parser, parent?: ASTNode): ASTNode => {
     if (parser.matchToken(TokenType.Identifier, 'If')) {
-      return ConditionalNode.parse(parser)
+      return IfNode.parse(parser)
+    } else if (parser.matchToken(TokenType.Identifier, 'Then')) {
+      return ThenNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'While')) {
       return WhileNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Repeat')) {

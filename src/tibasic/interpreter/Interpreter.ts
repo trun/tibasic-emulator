@@ -1,7 +1,5 @@
 import ASTNode from '../parser/ASTNode'
 import LblNode from '../parser/LblNode'
-import CodeBlockNode from '../parser/CodeBlockNode'
-import ConditionalNode from '../parser/ConditionalNode'
 import WhileNode from '../parser/WhileNode'
 import RepeatNode from '../parser/RepeatNode'
 import ForNode from '../parser/ForNode'
@@ -47,110 +45,111 @@ export default class Interpreter {
   // TODO use this for callbacks?
   input: string = ''
 
-  constructor(screen: HomeScreen) {
+  constructor(screen: HomeScreen, lines: ASTNode[]) {
     this.screen = screen
     this.loadFunctions().forEach((dict) => {
       Object.entries(dict).forEach(([key, value]) => {
         this.variables[key] = value
       })
     })
+
+    this.lines = lines
+    this.labels = {}
+    this.scanLabels(lines)
   }
 
-  interpret = (node: ASTNode) => {
-    this.lines = node.children
-    this.labels = {}
-    this.scanLabels(node)
+  next = () => {
+    this.executeStatement(this.lines[this.position++])
+  }
 
-    // TODO get this out of a loop? each statement should step...
-    for (this.position = 0; this.position < node.children.length; this.position++) {
-      this.executeStatement(node.children[this.position])
-    }
+  hasNext = (): boolean => {
+    return this.position < this.lines.length
   }
 
   setLastKey = (lastKey: number): void => {
     this.lastKey = lastKey
   }
 
-  private runLines = (node: ASTNode) => {
-    this.labels = {}
-    this.scanLabels(node)
+  // private runLines = (node: ASTNode) => {
+  //   this.labels = {}
+  //   this.scanLabels(node)
+  //
+  //   // if 'running' go to next line
+  //   // if 'jumping' go to line of specified label
+  //   // if 'looping' go to line of block start
+  //   // if 'ending' pop block, go to next line
+  //   // if 'waiting' wait for input?
+  //
+  // }
 
-    // if 'running' go to next line
-    // if 'jumping' go to line of specified label
-    // if 'looping' go to line of block start
-    // if 'ending' pop block, go to next line
-    // if 'waiting' wait for input?
+  // private runLine = (node: ASTNode): RunResult => {
+  //   switch (node.type) {
+  //     // Labels
+  //     case 'Lbl':
+  //       return { status: 'run' }
+  //     case 'Goto':
+  //       return { status: 'jump', label: (node as GotoNode).label }
+  //
+  //     // Control Flow
+  //     case 'While':
+  //       const whileNode = node as WhileNode
+  //       const predicate = Boolean(this.evaluateNode(whileNode.predicate))
+  //
+  //       this.blockStack.push(this.position)
+  //       this.blockStackPredicate.push(predicate)
+  //
+  //       return { status: 'run' }
+  //
+  //     case 'End':
+  //       const lastBlockPosition = this.blockStack[this.blockStack.length - 1]
+  //       const lastBlock = this.lines[lastBlockPosition]
+  //
+  //       if (lastBlock.type === 'While') {
+  //
+  //       }
+  //
+  //       const blockStart = this.blockStack
+  //
+  //     // Screen
+  //     case 'Disp':
+  //       const dispNode = node as DispNode
+  //       dispNode.args.arglist.forEach(argNode => {
+  //         this.screen.display(this.evaluateNode(argNode))
+  //       })
+  //       return { status: 'run' }
+  //     case 'Output':
+  //       const outputNode = node as OutputNode
+  //       const body = this.evaluateNode(outputNode.expression)
+  //       this.screen.output(outputNode.row, outputNode.col, body)
+  //       return { status: 'run' }
+  //     case 'ClrHome':
+  //       this.screen.clear()
+  //       return { status: 'run' }
+  //
+  //     // I/O
+  //
+  //     // Expressions
+  //     case 'Number':
+  //     case 'String':
+  //     case 'Identifier':
+  //     case 'BinaryOp':
+  //     case 'FunctionCall':
+  //       const result = this.evaluateNode(node)
+  //       this.variables['Ans'] = result
+  //       return { status: 'run' }
+  //     default:
+  //       return { status: 'error', message: `Unexpected AST node type: ${node.type}` }
+  //   }
+  // }
 
-  }
-
-  private runLine = (node: ASTNode): RunResult => {
-    switch (node.type) {
-      // Labels
-      case 'Lbl':
-        return { status: 'run' }
-      case 'Goto':
-        return { status: 'jump', label: (node as GotoNode).label }
-
-      // Control Flow
-      case 'While':
-        const whileNode = node as WhileNode
-        const predicate = Boolean(this.evaluateNode(whileNode.predicate()))
-
-        this.blockStack.push(this.position)
-        this.blockStackPredicate.push(predicate)
-
-        return { status: 'run' }
-
-      case 'End':
-        const lastBlockPosition = this.blockStack[this.blockStack.length - 1]
-        const lastBlock = this.lines[lastBlockPosition]
-
-        if (lastBlock.type === 'While') {
-
-        }
-
-        const blockStart = this.blockStack
-
-      // Screen
-      case 'Disp':
-        const dispNode = node as DispNode
-        dispNode.args().children.forEach(argNode => {
-          this.screen.display(this.evaluateNode(argNode))
-        })
-        return { status: 'run' }
-      case 'Output':
-        const outputNode = node as OutputNode
-        const body = this.evaluateNode(outputNode.children[0])
-        this.screen.output(outputNode.row, outputNode.col, body)
-        return { status: 'run' }
-      case 'ClrHome':
-        this.screen.clear()
-        return { status: 'run' }
-
-      // I/O
-
-      // Expressions
-      case 'Number':
-      case 'String':
-      case 'Identifier':
-      case 'BinaryOp':
-      case 'FunctionCall':
-        const result = this.evaluateNode(node)
-        this.variables['Ans'] = result
-        return { status: 'run' }
-      default:
-        return { status: 'error', message: `Unexpected AST node type: ${node.type}` }
-    }
-  }
-
-  private scanLabels = (node: ASTNode): void => {
-    node.children.forEach(childNode => {
+  private scanLabels = (lines: ASTNode[]): void => {
+    lines.forEach((childNode, position) => {
       if (childNode instanceof LblNode) {
         const label = (childNode as LblNode).label
         if (label in this.labels) {
           throw new Error(`Label '${label} is already declared!'`)
         }
-        this.labels[label] = this.position
+        this.labels[label] = position
       }
     })
   }
@@ -162,73 +161,75 @@ export default class Interpreter {
     ]
   }
 
-  private executeStatement = async (node: ASTNode) => {
-    if (node instanceof CodeBlockNode) {
-      node.children.forEach(childNode => {
-        this.executeStatement(childNode)
-      })
-    } else if (node instanceof ConditionalNode) {
-      const ifNode = node as ConditionalNode
-      const predicateResult: boolean = Boolean(this.evaluateNode(ifNode.predicate()))
-      if (predicateResult) {
-        this.executeStatement(ifNode.body())
-      } else if (ifNode.hasElseBody()) {
-        this.executeStatement(ifNode.elseBody())
-      }
-    } else if (node instanceof WhileNode) {
-      const whileNode = node as WhileNode
-      while (Boolean(this.evaluateNode(whileNode.predicate()))) {
-        // TODO better event loop
-        setTimeout(() => {
-          this.executeStatement(whileNode.body())
-        }, 10)
-      }
-    } else if (node instanceof RepeatNode) {
-      const repeatNode = node as RepeatNode
+  private executeStatement = (node: ASTNode) => {
+    // FIXME handle block statements / conditionals
+    // if (node instanceof CodeBlockNode) {
+    //   node.children.forEach(childNode => {
+    //     this.executeStatement(childNode)
+    //   })
+    // } else if (node instanceof ConditionalNode) {
+    //   const ifNode = node as ConditionalNode
+    //   const predicateResult: boolean = Boolean(this.evaluateNode(ifNode.predicate()))
+    //   if (predicateResult) {
+    //     this.executeStatement(ifNode.body())
+    //   } else if (ifNode.hasElseBody()) {
+    //     this.executeStatement(ifNode.elseBody())
+    //   }
+    // } else if (node instanceof WhileNode) {
+    //   const whileNode = node as WhileNode
+    //   while (Boolean(this.evaluateNode(whileNode.predicate()))) {
+    //     // TODO better event loop
+    //     setTimeout(() => {
+    //       this.executeStatement(whileNode.body())
+    //     }, 10)
+    //   }
+    // } else if (node instanceof RepeatNode) {
+    //   const repeatNode = node as RepeatNode
+    //
+    //   this.executeStatement(repeatNode.body())
+    //   if (!Boolean(this.evaluateNode(repeatNode.predicate()))) {
+    //     // TODO we need a better way to break outer loops, this shouldn't progress until complete...
+    //     await new Promise((resolve => {
+    //       setTimeout(() => {
+    //         this.executeStatement(repeatNode.body())
+    //         resolve(true)
+    //       }, 1000)
+    //     }))
+    //   }
+    // } else if (node instanceof ForNode) {
+    //   const forNode = node as ForNode
+    //   if (!(forNode.variable in this.variables)) {
+    //     this.variables[forNode.variable] = 0
+    //   }
+    //   for (this.variables[forNode.variable] = this.evaluateNode(forNode.start());
+    //        Number(this.variables[forNode.variable]) < Number(this.evaluateNode(forNode.end()));
+    //        this.variables[forNode.variable] += Number(this.evaluateNode(forNode.step()))) {
+    //     this.executeStatement(forNode.body())
+    //   }
 
-      this.executeStatement(repeatNode.body())
-      if (!Boolean(this.evaluateNode(repeatNode.predicate()))) {
-        // TODO we need a better way to break outer loops, this shouldn't progress until complete...
-        await new Promise((resolve => {
-          setTimeout(() => {
-            this.executeStatement(repeatNode.body())
-            resolve(true)
-          }, 1000)
-        }))
-      }
-    } else if (node instanceof ForNode) {
-      const forNode = node as ForNode
-      if (!(forNode.variable in this.variables)) {
-        this.variables[forNode.variable] = 0
-      }
-      for (this.variables[forNode.variable] = this.evaluateNode(forNode.start());
-           Number(this.variables[forNode.variable]) < Number(this.evaluateNode(forNode.end()));
-           this.variables[forNode.variable] += Number(this.evaluateNode(forNode.step()))) {
-        this.executeStatement(forNode.body())
-      }
-    } else if (node instanceof DispNode) {
+    if (node instanceof DispNode) {
       const dispNode = node as DispNode
-      dispNode.args().children.forEach(argNode => {
+      dispNode.args.arglist.forEach(argNode => {
         this.screen.display(this.evaluateNode(argNode))
       })
     } else if (node instanceof OutputNode) {
       const outputNode = node as OutputNode
-      const body = this.evaluateNode(outputNode.children[0])
+      const body = this.evaluateNode(outputNode.expression)
       this.screen.output(outputNode.row, outputNode.col, body)
     } else if (node instanceof ClrHomeNode) {
       this.screen.clear()
     } else if (node instanceof InputNode) {
-      const args = (node as InputNode).args()
+      const args = (node as InputNode).args
 
       // TODO handle invalid args?
       let prompt
       let identifier
-      if (args.children.length === 2) {
-        prompt = String(this.evaluateNode(args.children[0]))
-        identifier = (args.children[1] as IdentifierNode).identifier
+      if (args.arglist.length === 2) {
+        prompt = String(this.evaluateNode(args.arglist[0]))
+        identifier = (args.arglist[1] as IdentifierNode).identifier
       } else {
         prompt = '?'
-        identifier = (args.children[0] as IdentifierNode).identifier
+        identifier = (args.arglist[0] as IdentifierNode).identifier
       }
 
       const value: string | null = window.prompt(prompt, '')
@@ -240,7 +241,7 @@ export default class Interpreter {
       }
     } else if (node instanceof PromptNode) {
       const promptNode = node as PromptNode
-      promptNode.variables().children.forEach(varNode => {
+      promptNode.variables.arglist.forEach(varNode => {
         const identifier = (varNode as IdentifierNode).identifier
         const value: string | null = window.prompt(`${identifier}=?`, '')
 
@@ -281,9 +282,9 @@ export default class Interpreter {
       return (node as StringNode).value
     } else if (node instanceof FunctionCallNode) {
       const functionCallNode = node as FunctionCallNode
-      const target = this.evaluateNode(functionCallNode.target())
+      const target = this.evaluateNode(functionCallNode.target)
       if (target && target instanceof Function) {
-        const args: any[] = functionCallNode.args().children.map(argNode => this.evaluateNode(argNode))
+        const args: any[] = functionCallNode.args.arglist.map(argNode => this.evaluateNode(argNode))
         return (target as Function)(...args)
       }
     } else if (node instanceof IdentifierNode) {
@@ -317,9 +318,9 @@ export default class Interpreter {
       case BinaryOp.Modulus:
         return this.getLeftAsNumber(node) % this.getRightAsNumber(node)
       case BinaryOp.Equal:
-        return this.evaluateNode(node.left()) === this.evaluateNode(node.right())
+        return this.evaluateNode(node.left) === this.evaluateNode(node.right)
       case BinaryOp.NotEqual:
-        return this.evaluateNode(node.left()) !== this.evaluateNode(node.right())
+        return this.evaluateNode(node.left) !== this.evaluateNode(node.right)
       case BinaryOp.GreaterThan:
         return this.getLeftAsNumber(node) > this.getRightAsNumber(node)
       case BinaryOp.GreaterThanOrEqual:
@@ -329,8 +330,8 @@ export default class Interpreter {
       case BinaryOp.LessThanOrEqual:
         return this.getLeftAsNumber(node) <= this.getRightAsNumber(node)
       case BinaryOp.Assignment:
-        const value = this.evaluateNode(node.left())
-        const variable = (node.right() as IdentifierNode).identifier
+        const value = this.evaluateNode(node.left)
+        const variable = (node.right as IdentifierNode).identifier
         // TODO protect overwriting globals e.g. True / False
         this.variables[variable] = value
         return value
@@ -344,19 +345,19 @@ export default class Interpreter {
   }
 
   private getLeftAsNumber(node: BinaryOpNode): number {
-    return Number(this.evaluateNode(node.left()))
+    return Number(this.evaluateNode(node.left))
   }
 
   private getRightAsNumber(node: BinaryOpNode): number {
-    return Number(this.evaluateNode(node.right()))
+    return Number(this.evaluateNode(node.right))
   }
 
   private getLeftAsBoolean(node: BinaryOpNode): boolean {
-    return Boolean(this.evaluateNode(node.left()))
+    return Boolean(this.evaluateNode(node.left))
   }
 
   private getRightAsBoolean(node: BinaryOpNode): boolean {
-    return Boolean(this.evaluateNode(node.right()))
+    return Boolean(this.evaluateNode(node.right))
   }
 
 }

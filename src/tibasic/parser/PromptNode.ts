@@ -4,17 +4,15 @@ import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
 
 export default class PromptNode extends ASTNode {
+  readonly variables: ArgListNode
+
   constructor(variables: ArgListNode) {
     super('Prompt')
-    this.children.push(variables)
-  }
-
-  variables = (): ArgListNode => {
-    return this.children[0] as ArgListNode
+    this.variables = variables
   }
 
   static parse = (parser: Parser): PromptNode => {
-    parser.expectToken(TokenType.Identifier, "Prompt");
-    return new PromptNode(ArgListNode.parse(parser));
+    parser.expectToken(TokenType.Identifier, "Prompt")
+    return new PromptNode(ArgListNode.parse(parser))
   }
 }

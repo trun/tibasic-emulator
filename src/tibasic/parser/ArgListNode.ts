@@ -6,12 +6,12 @@ import ExpressionNode from './ExpressionNode'
 export default class ArgListNode extends ASTNode {
   readonly arglist: ExpressionNode[] = []
 
-  constructor(parent: ASTNode) {
-    super('ArgList', parent)
+  constructor() {
+    super('ArgList')
   }
 
-  static parse = (parser: Parser, parent: ASTNode): ArgListNode => {
-    const node = new ArgListNode(parent)
+  static parse = (parser: Parser): ArgListNode => {
+    const node = new ArgListNode()
     node.arglist.push(ExpressionNode.parse(parser))
     while (parser.acceptToken(TokenType.Comma)) {
       node.arglist.push(ExpressionNode.parse(parser))

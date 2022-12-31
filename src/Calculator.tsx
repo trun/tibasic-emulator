@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import HomeScreen, { MAX_COLS } from './tibasic/screen/HomeScreen'
 import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
@@ -8,7 +8,6 @@ import './Calculator.css'
 import './fonts/ti-83-plus-large.ttf'
 
 const screen = new HomeScreen()
-const interpreter = new Interpreter(screen)
 
 const SIMPLIFIED_KEY_MAP: { [key: string]: number } = {
   'ArrowLeft': 24,
@@ -40,27 +39,42 @@ GOTO HOME
 
 function Calculator() {
   const [screenText, setScreenText] = useState(screen.getChars())
+  const [interpreter, setInterpreter] = useState<Interpreter>()
   const [input, setInput] = useState('')
 
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
       const tokens = new Scanner().scan(PRINT_KEY_PRGM)
-      const astNode = new Parser(tokens).parse()
-      interpreter.interpret(astNode)
+      const program = new Parser(tokens).parse()
+      setInterpreter(new Interpreter(screen, program))
       setScreenText(screen.getChars())
     } else {
       const tokens = new Scanner().scan(input)
-      const astNode = new Parser(tokens).parse()
-      interpreter.interpret(astNode)
+      const program = new Parser(tokens).parse()
+      setInterpreter(new Interpreter(screen, program))
       setScreenText(screen.getChars())
       setInput('')
     }
   }
 
+  useEffect(() => {
+    if (!interpreter) {
+      return
+    }
+
+    const interval = setInterval(() => {
+      if (interpreter.hasNext()) {
+        interpreter.next()
+        setScreenText(screen.getChars())
+      }
+    }, 10)
+    return () => clearInterval(interval);
+  }, [interpreter])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.code in SIMPLIFIED_KEY_MAP) {
-      interpreter.setLastKey(SIMPLIFIED_KEY_MAP[e.code])
+      interpreter?.setLastKey(SIMPLIFIED_KEY_MAP[e.code])
     }
   }
 

@@ -7,31 +7,17 @@ import StatementNode from './StatementNode'
 
 export default class ForNode extends ASTNode {
   readonly variable: string
+  readonly start: ASTNode
+  readonly end: ASTNode
+  readonly step: ASTNode
 
-  constructor(variable: string, start: ASTNode, end: ASTNode, step: ASTNode, body: ASTNode) {
+  constructor(variable: string, start: ASTNode, end: ASTNode, step: ASTNode) {
     super('For')
 
     this.variable = variable
-    this.children.push(start)
-    this.children.push(end)
-    this.children.push(step)
-    this.children.push(body)
-  }
-
-  start = (): ASTNode => {
-    return this.children[0]
-  }
-
-  end = (): ASTNode => {
-    return this.children[1]
-  }
-
-  step = (): ASTNode => {
-    return this.children[2]
-  }
-
-  body = (): ASTNode => {
-    return this.children[3]
+    this.start = start
+    this.end = end
+    this.step = step
   }
 
   static parse = (parser: Parser): ForNode => {
@@ -53,8 +39,7 @@ export default class ForNode extends ASTNode {
     }
 
     parser.expectToken(TokenType.Parentheses, ')')
-    const body: ASTNode = StatementNode.parse(parser)
 
-    return new ForNode(variable, start, end, step, body)
+    return new ForNode(variable, start, end, step)
   }
 }

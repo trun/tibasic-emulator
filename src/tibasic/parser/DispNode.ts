@@ -4,13 +4,11 @@ import { TokenType } from '../lexer/scanner.d'
 import ArgListNode from './ArgListNode'
 
 export default class DispNode extends ASTNode {
+  readonly args: ArgListNode
+
   constructor(args: ArgListNode) {
     super('Disp');
-    this.children.push(args)
-  }
-
-  args = (): ArgListNode => {
-    return this.children[0] as ArgListNode
+    this.args = args
   }
 
   static parse = (parser: Parser): DispNode => {
