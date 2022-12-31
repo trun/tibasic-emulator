@@ -4,7 +4,7 @@ export default class IdentifierNode extends ASTNode {
   readonly identifier: string
 
   constructor(identifier: string) {
-    super()
+    super('Identifier')
     this.identifier = identifier
   }
 }

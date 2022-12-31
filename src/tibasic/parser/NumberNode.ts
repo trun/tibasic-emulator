@@ -4,7 +4,7 @@ export default class NumberNode extends ASTNode {
   readonly value: number
 
   constructor(value: number) {
-    super();
+    super('Number');
     this.value = value
   }
 }

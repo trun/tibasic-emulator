@@ -1,7 +1,13 @@
-export default class ASTNode {
-  children: ASTNode[]
+type NodeType = 'ArgList' | 'BinaryOp' | 'ClrHome' | 'CodeBlock' | 'Conditional' | 'Disp' | 'Expression' | 'For' |
+  'FunctionCall' | 'Goto' | 'Identifier' | 'Input' | 'Lbl' | 'Menu' | 'Number' | 'Output' | 'Prgm' | 'Prompt' |
+  'Repeat' | 'Statement' | 'String' | 'While' | 'End'
 
-  constructor() {
-    this.children = []
+export default class ASTNode {
+  readonly type: NodeType
+  readonly parent: ASTNode | null
+
+  constructor(type: NodeType, parent: ASTNode | null) {
+    this.type = type
+    this.parent = parent
   }
 }

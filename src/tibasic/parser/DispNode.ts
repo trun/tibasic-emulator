@@ -5,7 +5,7 @@ import ArgListNode from './ArgListNode'
 
 export default class DispNode extends ASTNode {
   constructor(args: ArgListNode) {
-    super();
+    super('Disp');
     this.children.push(args)
   }
 

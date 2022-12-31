@@ -4,7 +4,7 @@ export default class LblNode extends ASTNode {
   readonly label: string
 
   constructor(label: string) {
-    super()
+    super('Lbl')
 
     this.label = label
   }

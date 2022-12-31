@@ -3,7 +3,7 @@ import ArgListNode from './ArgListNode'
 
 export default class FunctionCallNode extends ASTNode {
   constructor(target: ASTNode, args: ArgListNode) {
-    super();
+    super('FunctionCall');
     this.children.push(target)
     this.children.push(args)
   }

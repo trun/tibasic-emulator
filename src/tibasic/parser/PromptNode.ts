@@ -5,7 +5,7 @@ import { TokenType } from '../lexer/scanner.d'
 
 export default class PromptNode extends ASTNode {
   constructor(variables: ArgListNode) {
-    super()
+    super('Prompt')
     this.children.push(variables)
   }
 

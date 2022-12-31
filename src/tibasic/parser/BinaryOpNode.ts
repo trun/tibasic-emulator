@@ -20,18 +20,13 @@ export enum BinaryOp {
 
 export default class BinaryOpNode extends ASTNode {
   readonly op: BinaryOp
+  readonly left: ASTNode
+  readonly right: ASTNode
 
-  constructor(op: BinaryOp, left: ASTNode, right: ASTNode) {
-    super();
+  constructor(op: BinaryOp, left: ASTNode, right: ASTNode, parent: ASTNode) {
+    super('BinaryOp', parent)
     this.op = op
-    this.children = [left, right]
-  }
-
-  left = (): ASTNode => {
-    return this.children[0]
-  }
-
-  right = (): ASTNode => {
-    return this.children[1]
+    this.left = left
+    this.right = right
   }
 }

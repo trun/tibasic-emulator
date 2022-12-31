@@ -8,7 +8,7 @@ export default class OutputNode extends ASTNode {
   readonly col: number
 
   constructor(row: number, col: number, expression: ASTNode) {
-    super()
+    super('Output')
 
     this.row = row
     this.col = col

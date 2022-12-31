@@ -4,7 +4,7 @@ export default class GotoNode extends ASTNode {
   readonly label: string
 
   constructor(label: string) {
-    super()
+    super('Goto')
     this.label = label
   }
 }

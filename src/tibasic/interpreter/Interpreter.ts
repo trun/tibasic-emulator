@@ -20,9 +20,14 @@ import OutputNode from '../parser/OutputNode'
 import ClrHomeNode from '../parser/ClrHomeNode'
 import HomeScreen from '../screen/HomeScreen'
 
+type RunResult = { status: 'run' } |
+  { status: 'jump', label: string } |
+  { status: 'error', message: string }
+
 export default class Interpreter {
   private readonly screen: HomeScreen
   private readonly variables: { [key: string]: any } = {
+    'Ans': 0, // TODO - this should have a default?
     'True': true,
     'False': false,
     'Null': null,
@@ -31,8 +36,13 @@ export default class Interpreter {
   }
 
   private labels: { [key: string]: number } = {}
-
+  private lines: ASTNode[] = []
   private position: number = 0
+
+  private blockStack: number[] = []
+  private blockStackPredicate: boolean[] = []
+
+  private lastKey: number = 0
 
   // TODO use this for callbacks?
   input: string = ''
@@ -46,12 +56,90 @@ export default class Interpreter {
     })
   }
 
-  interpret = (node: ASTNode): void => {
+  interpret = (node: ASTNode) => {
+    this.lines = node.children
     this.labels = {}
     this.scanLabels(node)
 
+    // TODO get this out of a loop? each statement should step...
     for (this.position = 0; this.position < node.children.length; this.position++) {
       this.executeStatement(node.children[this.position])
+    }
+  }
+
+  setLastKey = (lastKey: number): void => {
+    this.lastKey = lastKey
+  }
+
+  private runLines = (node: ASTNode) => {
+    this.labels = {}
+    this.scanLabels(node)
+
+    // if 'running' go to next line
+    // if 'jumping' go to line of specified label
+    // if 'looping' go to line of block start
+    // if 'ending' pop block, go to next line
+    // if 'waiting' wait for input?
+
+  }
+
+  private runLine = (node: ASTNode): RunResult => {
+    switch (node.type) {
+      // Labels
+      case 'Lbl':
+        return { status: 'run' }
+      case 'Goto':
+        return { status: 'jump', label: (node as GotoNode).label }
+
+      // Control Flow
+      case 'While':
+        const whileNode = node as WhileNode
+        const predicate = Boolean(this.evaluateNode(whileNode.predicate()))
+
+        this.blockStack.push(this.position)
+        this.blockStackPredicate.push(predicate)
+
+        return { status: 'run' }
+
+      case 'End':
+        const lastBlockPosition = this.blockStack[this.blockStack.length - 1]
+        const lastBlock = this.lines[lastBlockPosition]
+
+        if (lastBlock.type === 'While') {
+
+        }
+
+        const blockStart = this.blockStack
+
+      // Screen
+      case 'Disp':
+        const dispNode = node as DispNode
+        dispNode.args().children.forEach(argNode => {
+          this.screen.display(this.evaluateNode(argNode))
+        })
+        return { status: 'run' }
+      case 'Output':
+        const outputNode = node as OutputNode
+        const body = this.evaluateNode(outputNode.children[0])
+        this.screen.output(outputNode.row, outputNode.col, body)
+        return { status: 'run' }
+      case 'ClrHome':
+        this.screen.clear()
+        return { status: 'run' }
+
+      // I/O
+
+      // Expressions
+      case 'Number':
+      case 'String':
+      case 'Identifier':
+      case 'BinaryOp':
+      case 'FunctionCall':
+        const result = this.evaluateNode(node)
+        this.variables['Ans'] = result
+        return { status: 'run' }
+      default:
+        return { status: 'error', message: `Unexpected AST node type: ${node.type}` }
     }
   }
 
@@ -74,7 +162,7 @@ export default class Interpreter {
     ]
   }
 
-  private executeStatement = (node: ASTNode) => {
+  private executeStatement = async (node: ASTNode) => {
     if (node instanceof CodeBlockNode) {
       node.children.forEach(childNode => {
         this.executeStatement(childNode)
@@ -90,13 +178,24 @@ export default class Interpreter {
     } else if (node instanceof WhileNode) {
       const whileNode = node as WhileNode
       while (Boolean(this.evaluateNode(whileNode.predicate()))) {
-        this.executeStatement(whileNode.body())
+        // TODO better event loop
+        setTimeout(() => {
+          this.executeStatement(whileNode.body())
+        }, 10)
       }
     } else if (node instanceof RepeatNode) {
       const repeatNode = node as RepeatNode
-      do {
-        this.executeStatement(repeatNode.body())
-      } while (Boolean(this.evaluateNode(repeatNode.predicate())))
+
+      this.executeStatement(repeatNode.body())
+      if (!Boolean(this.evaluateNode(repeatNode.predicate()))) {
+        // TODO we need a better way to break outer loops, this shouldn't progress until complete...
+        await new Promise((resolve => {
+          setTimeout(() => {
+            this.executeStatement(repeatNode.body())
+            resolve(true)
+          }, 1000)
+        }))
+      }
     } else if (node instanceof ForNode) {
       const forNode = node as ForNode
       if (!(forNode.variable in this.variables)) {
@@ -170,7 +269,8 @@ export default class Interpreter {
         throw new Error(`Goto undefined label: ${label}`)
       }
     } else {
-      this.evaluateNode(node)
+      // TODO set 'Ans' on every one of these?
+      this.variables['Ans'] = this.evaluateNode(node)
     }
   }
 
@@ -189,7 +289,9 @@ export default class Interpreter {
     } else if (node instanceof IdentifierNode) {
       const identifier = (node as IdentifierNode).identifier
       if (identifier === 'getKey') {
-        // return readLine(true) // FIXME
+        const retVal = this.lastKey
+        this.lastKey = 0
+        return retVal
       } else if (identifier in this.variables) {
         return this.variables[identifier]
       } else {

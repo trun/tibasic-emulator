@@ -15,9 +15,10 @@ import PromptNode from './PromptNode'
 import ClrHomeNode from './ClrHomeNode'
 import OutputNode from './OutputNode'
 import MenuNode from './MenuNode'
+import EndNode from './EndNode'
 
 export default class StatementNode extends ASTNode {
-  static parse = (parser: Parser): ASTNode => {
+  static parse = (parser: Parser, parent?: ASTNode): ASTNode => {
     if (parser.matchToken(TokenType.Identifier, 'If')) {
       return ConditionalNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'While')) {
@@ -26,6 +27,8 @@ export default class StatementNode extends ASTNode {
       return RepeatNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'For')) {
       return ForNode.parse(parser)
+    } else if (parser.matchToken(TokenType.Identifier, 'End')) {
+      return new EndNode()
     } else if (parser.matchToken(TokenType.Identifier, 'Disp')) {
       return DispNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Output')) {

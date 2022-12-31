@@ -3,10 +3,11 @@ import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
 import ExpressionNode from './ExpressionNode'
 import StatementNode from './StatementNode'
+import CodeBlockNode from './CodeBlockNode'
 
 export default class RepeatNode extends ASTNode {
   constructor(predicate: ASTNode, body: ASTNode) {
-    super()
+    super('Repeat')
 
     this.children.push(predicate)
     this.children.push(body)
@@ -24,7 +25,12 @@ export default class RepeatNode extends ASTNode {
     parser.expectToken(TokenType.Identifier, 'Repeat')
 
     const predicate: ASTNode = ExpressionNode.parse(parser)
-    const body: ASTNode = StatementNode.parse(parser)
+
+    // is this right??
+    const body: CodeBlockNode = new CodeBlockNode()
+    while (!parser.acceptToken(TokenType.Identifier, 'End')) {
+      body.children.push(StatementNode.parse(parser))
+    }
 
     return new RepeatNode(predicate, body)
   }

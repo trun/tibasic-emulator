@@ -9,7 +9,7 @@ export default class ForNode extends ASTNode {
   readonly variable: string
 
   constructor(variable: string, start: ASTNode, end: ASTNode, step: ASTNode, body: ASTNode) {
-    super()
+    super('For')
 
     this.variable = variable
     this.children.push(start)

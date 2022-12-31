@@ -6,7 +6,7 @@ export default class PrgmNode extends ASTNode {
   readonly prgmPath: string
 
   constructor(prgmPath: string) {
-    super()
+    super('Prgm')
 
     this.prgmPath = prgmPath
   }

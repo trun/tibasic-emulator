@@ -5,8 +5,11 @@ import ExpressionNode from './ExpressionNode'
 import StatementNode from './StatementNode'
 
 export default class ConditionalNode extends ASTNode {
+  readonly predicate: ASTNode
+  readonly body: ASTNode
+
   constructor(predicate: ASTNode, body: ASTNode, elseBody?: ASTNode) {
-    super();
+    super('Conditional');
 
     this.children.push(predicate)
     this.children.push(body)

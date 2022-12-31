@@ -14,7 +14,7 @@ export default class MenuNode extends ASTNode {
   readonly options: OptionAndLabel[]
 
   constructor(title: ExpressionNode, options: OptionAndLabel[]) {
-    super()
+    super('Menu')
 
     this.title = title
     this.options = options

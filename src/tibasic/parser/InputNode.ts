@@ -5,7 +5,7 @@ import { TokenType } from '../lexer/scanner.d'
 
 export default class InputNode extends ASTNode {
   constructor(args: ArgListNode) {
-    super()
+    super('Input')
     this.children.push(args)
   }
 

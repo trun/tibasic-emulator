@@ -4,11 +4,17 @@ import { TokenType } from '../lexer/scanner.d'
 import ExpressionNode from './ExpressionNode'
 
 export default class ArgListNode extends ASTNode {
-  static parse = (parser: Parser): ArgListNode => {
-    const node = new ArgListNode()
-    node.children.push(ExpressionNode.parse(parser))
+  readonly arglist: ExpressionNode[] = []
+
+  constructor(parent: ASTNode) {
+    super('ArgList', parent)
+  }
+
+  static parse = (parser: Parser, parent: ASTNode): ArgListNode => {
+    const node = new ArgListNode(parent)
+    node.arglist.push(ExpressionNode.parse(parser))
     while (parser.acceptToken(TokenType.Comma)) {
-      node.children.push(ExpressionNode.parse(parser))
+      node.arglist.push(ExpressionNode.parse(parser))
     }
     return node
   }
