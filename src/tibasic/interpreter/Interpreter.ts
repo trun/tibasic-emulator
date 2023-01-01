@@ -19,7 +19,9 @@ import ClrHomeNode from '../parser/ClrHomeNode'
 import HomeScreen from '../screen/HomeScreen'
 
 type RunResult = { status: 'run' } |
-  { status: 'jump', label: string } |
+  { status: 'goto', label: string } |
+  { status: 'jump', position: number } |
+  { status: 'skip', position: number } |
   { status: 'error', message: string }
 
 export default class Interpreter {
@@ -38,8 +40,7 @@ export default class Interpreter {
   private position: number = 0
 
   private blockStack: number[] = []
-  private blockStackPredicate: boolean[] = []
-
+  private blockStackPredicate: number[] = []
   private lastKey: number = 0
 
   // TODO use this for callbacks?
@@ -66,8 +67,11 @@ export default class Interpreter {
       case 'run':
         this.position++
         break
-      case 'jump':
+      case 'goto':
         this.position = this.labels[result.label]
+        break
+      case 'jump':
+        this.position = result.position
         break
       case 'error':
         console.error(result.message)
@@ -84,45 +88,44 @@ export default class Interpreter {
     this.lastKey = lastKey
   }
 
-  // private runLines = (node: ASTNode) => {
-  //   this.labels = {}
-  //   this.scanLabels(node)
-  //
-  //   // if 'running' go to next line
-  //   // if 'jumping' go to line of specified label
-  //   // if 'looping' go to line of block start
-  //   // if 'ending' pop block, go to next line
-  //   // if 'waiting' wait for input?
-  //
-  // }
-
   private runLine = (node: ASTNode): RunResult => {
     switch (node.type) {
       // Labels
       case 'Lbl':
         return { status: 'run' }
       case 'Goto':
-        return { status: 'jump', label: (node as GotoNode).label }
+        return { status: 'goto', label: (node as GotoNode).label }
 
-      // // Control Flow
-      // case 'While':
-      //   const whileNode = node as WhileNode
-      //   const predicate = Boolean(this.evaluateNode(whileNode.predicate))
-      //
-      //   this.blockStack.push(this.position)
-      //   this.blockStackPredicate.push(predicate)
-      //
-      //   return { status: 'run' }
-      //
-      // case 'End':
-      //   const lastBlockPosition = this.blockStack[this.blockStack.length - 1]
-      //   const lastBlock = this.lines[lastBlockPosition]
-      //
-      //   if (lastBlock.type === 'While') {
-      //
-      //   }
-      //
-      //   const blockStart = this.blockStack
+      // Control Flow
+      case 'Repeat':
+        this.blockStack.push(this.position)
+        return { status: 'run' }
+      case 'While':
+        const whileNode = node as WhileNode
+        this.blockStack.push(this.position)
+        if (Boolean(this.evaluateNode(whileNode.predicate))) {
+          return { status: 'run' }
+        } else {
+          // FIXME -- jump to END?
+          return { status: 'error', message: 'Unimplemented falsy while condition' }
+        }
+
+      case 'End':
+        const lastBlockPosition: number = this.blockStack.pop() as number
+        const lastNode: ASTNode = this.lines[lastBlockPosition]
+
+        if (lastNode.type === 'Repeat') {
+          const repeatNode = lastNode as RepeatNode
+          if (Boolean(this.evaluateNode(repeatNode.predicate))) {
+            return { status: 'run' }
+          } else {
+            return { status: 'jump', position: lastBlockPosition }
+          }
+        } else if (lastNode.type === 'While') {
+          return { status: 'jump', position: lastBlockPosition }
+        } else {
+          return { status: 'error', message: `Reached END for unimplemented block node: ${lastNode.type}` }
+        }
 
       // Screen
       case 'Disp':

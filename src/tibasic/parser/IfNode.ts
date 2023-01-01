@@ -2,7 +2,6 @@ import ASTNode from './ASTNode'
 import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
 import ExpressionNode from './ExpressionNode'
-import StatementNode from './StatementNode'
 
 export default class IfNode extends ASTNode {
   readonly predicate: ASTNode

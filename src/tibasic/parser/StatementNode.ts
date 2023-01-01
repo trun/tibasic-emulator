@@ -31,7 +31,7 @@ export default class StatementNode extends ASTNode {
     } else if (parser.matchToken(TokenType.Identifier, 'For')) {
       return ForNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'End')) {
-      return new EndNode()
+      return EndNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Disp')) {
       return DispNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Output')) {

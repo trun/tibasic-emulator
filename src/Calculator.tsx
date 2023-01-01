@@ -33,15 +33,9 @@ REPEAT Ans
 getKey
 END
 Ans -> K
-DISP "YOU PRESSED...", K
-GOTO HOME
-`
-
-const LOOP_PRGM = `
-0 -> X
-LBL HOME
-X + 1 -> X
-DISP "Counter...", X
+OUTPUT(1,1,"YOUR KEY: ")
+OUTPUT(1,11,"   ")
+OUTPUT(1,11,K)
 GOTO HOME
 `
 
@@ -53,7 +47,7 @@ function Calculator() {
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(LOOP_PRGM)
+      const tokens = new Scanner().scan(PRINT_KEY_PRGM)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(screen, program))
       setScreenText(screen.getChars())
