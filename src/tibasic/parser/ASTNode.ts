@@ -1,6 +1,6 @@
 type NodeType = 'ArgList' | 'BinaryOp' | 'ClrHome' | 'CodeBlock' | 'Conditional' | 'Disp' | 'Expression' | 'For' |
   'FunctionCall' | 'Goto' | 'Identifier' | 'Input' | 'Lbl' | 'Menu' | 'Number' | 'Output' | 'Prgm' | 'Prompt' |
-  'Repeat' | 'Statement' | 'String' | 'While' | 'End' | 'If' | 'Then' | 'Else'
+  'Repeat' | 'Statement' | 'String' | 'While' | 'End' | 'If' | 'Then' | 'Else' | 'Pause'
 
 export default class ASTNode {
   readonly type: NodeType

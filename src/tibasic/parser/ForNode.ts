@@ -31,7 +31,6 @@ export default class ForNode extends ASTNode {
     parser.expectToken(TokenType.Comma)
 
     const end: ASTNode = ExpressionNode.parse(parser)
-    parser.expectToken(TokenType.Comma)
 
     let step: ASTNode = new NumberNode(1)
     if (parser.acceptToken(TokenType.Comma)) {

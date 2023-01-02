@@ -17,9 +17,10 @@ import OutputNode from './OutputNode'
 import MenuNode from './MenuNode'
 import EndNode from './EndNode'
 import ThenNode from './ThenNode'
+import PauseNode from './PauseNode'
 
 export default class StatementNode extends ASTNode {
-  static parse = (parser: Parser, parent?: ASTNode): ASTNode => {
+  static parse = (parser: Parser): ASTNode => {
     if (parser.matchToken(TokenType.Identifier, 'If')) {
       return IfNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Then')) {
@@ -40,6 +41,8 @@ export default class StatementNode extends ASTNode {
       return InputNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Prompt')) {
       return PromptNode.parse(parser)
+    } else if (parser.matchToken(TokenType.Identifier, 'Pause')) {
+      return PauseNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'ClrHome')) {
       return ClrHomeNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Prgm')) {

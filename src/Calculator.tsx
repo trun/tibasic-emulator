@@ -9,6 +9,9 @@ import './fonts/ti-83-plus-large.ttf'
 
 const screen = new HomeScreen()
 
+// TI-83 clock speed is 1000 Hz
+const TICK_SPEED_MS = 1
+
 const SIMPLIFIED_KEY_MAP: { [key: string]: number } = {
   'ArrowLeft': 24,
   'ArrowTop': 25,
@@ -39,15 +42,22 @@ OUTPUT(1,11,K)
 GOTO HOME
 `
 
+const PAUSE_PRGM = `
+FOR(X,1,10)
+PAUSE X
+END
+`
+
 function Calculator() {
   const [screenText, setScreenText] = useState(screen.getChars())
   const [interpreter, setInterpreter] = useState<Interpreter>()
+  const [running, setRunning] = useState<boolean>(true)
   const [input, setInput] = useState('')
 
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(PRINT_KEY_PRGM)
+      const tokens = new Scanner().scan(PAUSE_PRGM)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(screen, program))
       setScreenText(screen.getChars())
@@ -66,17 +76,23 @@ function Calculator() {
     }
 
     const interval = setInterval(() => {
-      if (interpreter.hasNext()) {
-        interpreter.next()
+      if (running && interpreter.hasNext()) {
+        if (!interpreter.next()) {
+          setRunning(false)
+        }
         setScreenText(screen.getChars())
       }
-    }, 10)
+    }, TICK_SPEED_MS)
     return () => clearInterval(interval);
-  }, [interpreter])
+  }, [interpreter, running])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.code in SIMPLIFIED_KEY_MAP) {
       interpreter?.setLastKey(SIMPLIFIED_KEY_MAP[e.code])
+    }
+
+    if (e.code === 'Enter' && !running) {
+      setRunning(true)
     }
   }
 

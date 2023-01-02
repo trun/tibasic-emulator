@@ -8,7 +8,7 @@ import NumberNode from '../parser/NumberNode'
 import StringNode from '../parser/StringNode'
 import FunctionCallNode from '../parser/FunctionCallNode'
 import IdentifierNode from '../parser/IdentifierNode'
-import BinaryOpNode, {BinaryOp} from '../parser/BinaryOpNode'
+import BinaryOpNode, { BinaryOp } from '../parser/BinaryOpNode'
 import GotoNode from '../parser/GotoNode'
 import PrgmNode from '../parser/PrgmNode'
 import PromptNode from '../parser/PromptNode'
@@ -17,12 +17,14 @@ import StandardLibrary from './StandardLibrary'
 import OutputNode from '../parser/OutputNode'
 import ClrHomeNode from '../parser/ClrHomeNode'
 import HomeScreen from '../screen/HomeScreen'
+import PauseNode from '../parser/PauseNode'
 
 type RunResult = { status: 'run' } |
   { status: 'goto', label: string } |
   { status: 'jump', position: number } |
   { status: 'skip', position: number } |
-  { status: 'error', message: string }
+  { status: 'error', message: string } |
+  { status: 'pause' }
 
 export default class Interpreter {
   private readonly screen: HomeScreen
@@ -40,7 +42,8 @@ export default class Interpreter {
   private position: number = 0
 
   private blockStack: number[] = []
-  private blockStackPredicate: number[] = []
+  private skippedBlockHeight: number | undefined = undefined
+  private forLoopInitialization: { [position: number]: boolean } = {}
   private lastKey: number = 0
 
   // TODO use this for callbacks?
@@ -59,9 +62,16 @@ export default class Interpreter {
     this.scanLabels(lines)
   }
 
-  next = () => {
+  next = (): boolean => {
     const node = this.lines[this.position]
-    const result = this.runLine(node)
+
+    let result: RunResult
+    if (this.skippedBlockHeight !== undefined && this.blockStack.length > this.skippedBlockHeight) {
+      result = this.skipLine(node)
+    } else {
+      this.skippedBlockHeight = undefined // no longer in skip mode
+      result = this.runLine(node)
+    }
 
     switch (result.status) {
       case 'run':
@@ -73,11 +83,16 @@ export default class Interpreter {
       case 'jump':
         this.position = result.position
         break
+      case 'pause':
+        this.position++
+        return false
       case 'error':
         console.error(result.message)
         this.position = this.lines.length
         break
     }
+
+    return true
   }
 
   hasNext = (): boolean => {
@@ -86,6 +101,22 @@ export default class Interpreter {
 
   setLastKey = (lastKey: number): void => {
     this.lastKey = lastKey
+  }
+
+  private skipLine = (node: ASTNode): RunResult => {
+    switch (node.type) {
+      case 'While':
+      case 'Repeat':
+      case 'For':
+      case 'Then':
+        this.blockStack.push(this.position)
+        return { status: 'run' }
+      case 'End':
+        this.blockStack.pop()
+        return { status: 'run' }
+      default:
+        return { status: 'run' }
+    }
   }
 
   private runLine = (node: ASTNode): RunResult => {
@@ -106,9 +137,19 @@ export default class Interpreter {
         if (Boolean(this.evaluateNode(whileNode.predicate))) {
           return { status: 'run' }
         } else {
-          // FIXME -- jump to END?
-          return { status: 'error', message: 'Unimplemented falsy while condition' }
+          this.skippedBlockHeight = this.blockStack.length
+          return { status: 'run' }
         }
+      case 'For':
+        const forNode = node as ForNode
+        const variable = new IdentifierNode(forNode.variable)
+        const startValue = new NumberNode(Number(this.evaluateNode(forNode.start)))
+        if (!(this.position in this.forLoopInitialization)) {
+          this.forLoopInitialization[this.position] = true
+          this.evaluateNode(new BinaryOpNode(BinaryOp.Assignment, startValue, variable))
+        }
+        this.blockStack.push(this.position)
+        return { status: 'run' }
 
       case 'End':
         const lastBlockPosition: number = this.blockStack.pop() as number
@@ -123,6 +164,20 @@ export default class Interpreter {
           }
         } else if (lastNode.type === 'While') {
           return { status: 'jump', position: lastBlockPosition }
+        } else if (lastNode.type === 'For') {
+          const forNode = lastNode as ForNode
+          const variable = new IdentifierNode(forNode.variable)
+          const endValue = new NumberNode(Number(this.evaluateNode(forNode.end)))
+          const stepValue = new NumberNode(Number(this.evaluateNode(forNode.step)))
+          const predicate = new BinaryOpNode(BinaryOp.LessThanOrEqual, variable, endValue)
+          if (Boolean(this.evaluateNode(predicate))) {
+            const nextValue = new BinaryOpNode(BinaryOp.Addition, variable, stepValue)
+            this.evaluateNode(new BinaryOpNode(BinaryOp.Assignment, nextValue, variable))
+            return { status: 'jump', position: lastBlockPosition }
+          } else {
+            delete this.forLoopInitialization[this.position]
+            return { status: 'run' }
+          }
         } else {
           return { status: 'error', message: `Reached END for unimplemented block node: ${lastNode.type}` }
         }
@@ -144,6 +199,12 @@ export default class Interpreter {
         return { status: 'run' }
 
       // I/O
+      case 'Pause':
+        const pauseNode = node as PauseNode
+        if (pauseNode.args.arglist.length > 0) {
+          this.screen.display(this.evaluateNode(pauseNode.args.arglist[0]))
+        }
+        return { status: 'pause' }
 
       // Expressions
       case 'Number':
@@ -172,7 +233,6 @@ export default class Interpreter {
   }
 
   private loadFunctions = (path?: string): { [key: string]: (...args: any[]) => any }[] => {
-    // FIXME - other than stdlib?
     return [
       StandardLibrary.getFunctions()
     ]

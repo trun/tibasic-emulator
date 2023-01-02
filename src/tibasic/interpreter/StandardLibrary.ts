@@ -10,7 +10,7 @@ export default class StandardLibrary {
       'log': (x) => Math.log10(Number(x)),
       'ln': (x) => Math.log(Number(x)),
       'sqrt': (x) => Math.sqrt(Number(x)),
-      'random': (min, max) => {
+      'randInt': (min, max) => {
         min = Number(min)
         max = Number(max)
         return Math.random() * (max - min) + min
