@@ -48,6 +48,12 @@ PAUSE X
 END
 `
 
+const TIMER_PRGM = `
+FOR(X,1,10000)
+OUTPUT(1,1,X/1000)
+END
+`
+
 function Calculator() {
   const [screenText, setScreenText] = useState(screen.getChars())
   const [interpreter, setInterpreter] = useState<Interpreter>()
@@ -57,7 +63,7 @@ function Calculator() {
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(PAUSE_PRGM)
+      const tokens = new Scanner().scan(TIMER_PRGM)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(screen, program))
       setScreenText(screen.getChars())

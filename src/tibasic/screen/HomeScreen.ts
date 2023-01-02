@@ -50,16 +50,17 @@ export default class HomeScreen {
       }
     }
 
-    if (row === MAX_ROWS) {
-      this.chars = HomeScreen.makeEmptyLines()
-      row = 1
-    }
+    // TODO need to fix scrolling behavior?
+    // if (row === MAX_ROWS) {
+    //   this.chars = HomeScreen.makeEmptyLines()
+    //   row = 1
+    // }
 
     this.output(row, 1, line)
 
     // if all lines have text now, scroll
-    if (row >= MAX_ROWS - 1) {
-      this.chars = HomeScreen.makeEmptyLines()
+    if (row >= MAX_ROWS) {
+      this.chars = this.chars.substring(MAX_COLS) + HomeScreen.makeEmptyLine()
     }
   }
 
@@ -71,6 +72,10 @@ export default class HomeScreen {
    */
   private offset = (row: number, col: number): number => {
     return (row - 1) * MAX_COLS + (col - 1)
+  }
+
+  static makeEmptyLine = (): string => {
+    return ' '.repeat(MAX_COLS)
   }
 
   static makeEmptyLines = (): string => {
