@@ -18,16 +18,20 @@ import OutputNode from '../parser/OutputNode'
 import ClrHomeNode from '../parser/ClrHomeNode'
 import HomeScreen from '../screen/HomeScreen'
 import PauseNode from '../parser/PauseNode'
+import MenuScreen from '../screen/MenuScreen'
+import MenuNode from '../parser/MenuNode'
 
 type RunResult = { status: 'run' } |
   { status: 'goto', label: string } |
   { status: 'jump', position: number } |
   { status: 'skip', position: number } |
   { status: 'error', message: string } |
-  { status: 'pause' }
+  { status: 'pause' } |
+  { status: 'menu' }
 
 export default class Interpreter {
-  private readonly screen: HomeScreen
+  private readonly homeScreen: HomeScreen
+  private readonly menuScreen: MenuScreen
   private readonly variables: { [key: string]: any } = {
     'Ans': 0, // TODO - this should have a default?
     'True': true,
@@ -49,8 +53,9 @@ export default class Interpreter {
   // TODO use this for callbacks?
   input: string = ''
 
-  constructor(screen: HomeScreen, lines: ASTNode[]) {
-    this.screen = screen
+  constructor(homeScreen: HomeScreen, menuScreen: MenuScreen, lines: ASTNode[]) {
+    this.homeScreen = homeScreen
+    this.menuScreen = menuScreen
     this.loadFunctions().forEach((dict) => {
       Object.entries(dict).forEach(([key, value]) => {
         this.variables[key] = value
@@ -186,23 +191,29 @@ export default class Interpreter {
       case 'Disp':
         const dispNode = node as DispNode
         dispNode.args.arglist.forEach(argNode => {
-          this.screen.display(this.evaluateNode(argNode))
+          this.homeScreen.display(this.evaluateNode(argNode))
         })
         return { status: 'run' }
       case 'Output':
         const outputNode = node as OutputNode
         const body = this.evaluateNode(outputNode.expression)
-        this.screen.output(outputNode.row, outputNode.col, body)
+        this.homeScreen.output(outputNode.row, outputNode.col, body)
         return { status: 'run' }
       case 'ClrHome':
-        this.screen.clear()
+        this.homeScreen.clear()
         return { status: 'run' }
+      case 'Menu':
+        const menuNode = node as MenuNode
+        const title = String(this.evaluateNode(menuNode.title))
+        const labels = menuNode.options.map(option => String(this.evaluateNode(option.option)))
+        this.menuScreen.setTitleAndOptions(title, labels)
+        return { status: 'menu' }
 
       // I/O
       case 'Pause':
         const pauseNode = node as PauseNode
         if (pauseNode.args.arglist.length > 0) {
-          this.screen.display(this.evaluateNode(pauseNode.args.arglist[0]))
+          this.homeScreen.display(this.evaluateNode(pauseNode.args.arglist[0]))
         }
         return { status: 'pause' }
 
@@ -287,14 +298,14 @@ export default class Interpreter {
     if (node instanceof DispNode) {
       const dispNode = node as DispNode
       dispNode.args.arglist.forEach(argNode => {
-        this.screen.display(this.evaluateNode(argNode))
+        this.homeScreen.display(this.evaluateNode(argNode))
       })
     } else if (node instanceof OutputNode) {
       const outputNode = node as OutputNode
       const body = this.evaluateNode(outputNode.expression)
-      this.screen.output(outputNode.row, outputNode.col, body)
+      this.homeScreen.output(outputNode.row, outputNode.col, body)
     } else if (node instanceof ClrHomeNode) {
-      this.screen.clear()
+      this.homeScreen.clear()
     } else if (node instanceof InputNode) {
       const args = (node as InputNode).args
 

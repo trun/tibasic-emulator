@@ -1,32 +1,32 @@
-interface OptionAndLabel {
-  option: string,
-  label: string,
-}
-
 export default class MenuScreen {
-  private readonly optionsAndLabels: OptionAndLabel[]
-  private readonly callback: (label: string) => void
+  private title: string = ''
+  private labels: string[] = []
   private currentIndex: number = 0
 
-  constructor(optionsAndLabels: OptionAndLabel[], callback: (label: string) => void) {
-    this.optionsAndLabels = optionsAndLabels
-    this.callback = callback
+  setTitleAndOptions = (title: string, labels: string[]): void => {
+    this.title = title.substring(0, 16)
+    this.labels = labels.map(label => label.substring(0, 14))
+    this.currentIndex = 0
+  }
+
+  getTitle = (): string => {
+    return this.title
+  }
+
+  getLabels = (): string[] => {
+    return this.labels
+  }
+
+  getCurrentIndex = (): number => {
+    return this.currentIndex
   }
 
   nextOption = (): void => {
-    this.currentIndex = (this.currentIndex + 1) % this.optionsAndLabels.length
+    this.currentIndex = (this.currentIndex + 1) % this.labels.length
   }
 
   prevOption = (): void => {
-    this.currentIndex = this.currentIndex <= 0 ? (this.optionsAndLabels.length - 1) : this.currentIndex - 1
-  }
-
-  selectOption = (index: number): void => {
-    this.callback(this.optionsAndLabels[index].label)
-  }
-
-  selectCurrentOption = (): void => {
-    this.callback(this.optionsAndLabels[this.currentIndex].label)
+    this.currentIndex = this.currentIndex <= 0 ? (this.labels.length - 1) : this.currentIndex - 1
   }
 
 }

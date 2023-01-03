@@ -6,15 +6,17 @@ import Parser from './tibasic/parser/Parser'
 
 import './Calculator.css'
 import './fonts/ti-83-plus-large.ttf'
+import MenuScreen from './tibasic/screen/MenuScreen'
 
-const screen = new HomeScreen()
+const homeScreen = new HomeScreen()
+const menuScreen = new MenuScreen()
 
 // TI-83 clock speed is 1000 Hz
 const TICK_SPEED_MS = 1
 
 const SIMPLIFIED_KEY_MAP: { [key: string]: number } = {
   'ArrowLeft': 24,
-  'ArrowTop': 25,
+  'ArrowUp': 25,
   'ArrowRight': 26,
   'ArrowDown': 34,
   'Enter': 105,
@@ -54,8 +56,14 @@ OUTPUT(1,1,X/1000)
 END
 `
 
+type ScreenMode = 'Home' | 'Menu'
+
 function Calculator() {
-  const [screenText, setScreenText] = useState(screen.getChars())
+  const [screenMode, setScreenMode] = useState<ScreenMode>('Home')
+  const [screenText, setScreenText] = useState(homeScreen.getChars())
+  const [menuTitle, setMenuTitle] = useState(menuScreen.getTitle())
+  const [menuLabels, setMenuLabels] = useState(menuScreen.getLabels())
+  const [menuCurrentIndex, setMenuCurrentIndex] = useState(menuScreen.getCurrentIndex())
   const [interpreter, setInterpreter] = useState<Interpreter>()
   const [running, setRunning] = useState<boolean>(true)
   const [input, setInput] = useState('')
@@ -63,15 +71,15 @@ function Calculator() {
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(TIMER_PRGM)
+      const tokens = new Scanner().scan(PRINT_KEY_PRGM)
       const program = new Parser(tokens).parse()
-      setInterpreter(new Interpreter(screen, program))
-      setScreenText(screen.getChars())
+      setInterpreter(new Interpreter(homeScreen, menuScreen, program))
+      setScreenText(homeScreen.getChars())
     } else {
       const tokens = new Scanner().scan(input)
       const program = new Parser(tokens).parse()
-      setInterpreter(new Interpreter(screen, program))
-      setScreenText(screen.getChars())
+      setInterpreter(new Interpreter(homeScreen, menuScreen, program))
+      setScreenText(homeScreen.getChars())
       setInput('')
     }
   }
@@ -86,7 +94,7 @@ function Calculator() {
         if (!interpreter.next()) {
           setRunning(false)
         }
-        setScreenText(screen.getChars())
+        setScreenText(homeScreen.getChars())
       }
     }, TICK_SPEED_MS)
     return () => clearInterval(interval);
