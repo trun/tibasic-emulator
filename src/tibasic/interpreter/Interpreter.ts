@@ -10,12 +10,8 @@ import FunctionCallNode from '../parser/FunctionCallNode'
 import IdentifierNode from '../parser/IdentifierNode'
 import BinaryOpNode, { BinaryOp } from '../parser/BinaryOpNode'
 import GotoNode from '../parser/GotoNode'
-import PrgmNode from '../parser/PrgmNode'
-import PromptNode from '../parser/PromptNode'
-import InputNode from '../parser/InputNode'
 import StandardLibrary from './StandardLibrary'
 import OutputNode from '../parser/OutputNode'
-import ClrHomeNode from '../parser/ClrHomeNode'
 import HomeScreen from '../screen/HomeScreen'
 import PauseNode from '../parser/PauseNode'
 import MenuScreen from '../screen/MenuScreen'
@@ -279,6 +275,8 @@ export default class Interpreter {
         const body = this.evaluateNode(outputNode.expression)
         this.homeScreen.output(outputNode.row, outputNode.col, body)
         return { status: 'run' }
+      case 'Input':
+        return { status: 'run' } // FIXME
       case 'ClrHome':
         this.homeScreen.clear()
         return { status: 'run' }
@@ -329,120 +327,6 @@ export default class Interpreter {
     ]
   }
 
-  private executeStatement = (node: ASTNode) => {
-    // FIXME handle block statements / conditionals
-    // if (node instanceof CodeBlockNode) {
-    //   node.children.forEach(childNode => {
-    //     this.executeStatement(childNode)
-    //   })
-    // } else if (node instanceof ConditionalNode) {
-    //   const ifNode = node as ConditionalNode
-    //   const predicateResult: boolean = Boolean(this.evaluateNode(ifNode.predicate()))
-    //   if (predicateResult) {
-    //     this.executeStatement(ifNode.body())
-    //   } else if (ifNode.hasElseBody()) {
-    //     this.executeStatement(ifNode.elseBody())
-    //   }
-    // } else if (node instanceof WhileNode) {
-    //   const whileNode = node as WhileNode
-    //   while (Boolean(this.evaluateNode(whileNode.predicate()))) {
-    //     // TODO better event loop
-    //     setTimeout(() => {
-    //       this.executeStatement(whileNode.body())
-    //     }, 10)
-    //   }
-    // } else if (node instanceof RepeatNode) {
-    //   const repeatNode = node as RepeatNode
-    //
-    //   this.executeStatement(repeatNode.body())
-    //   if (!Boolean(this.evaluateNode(repeatNode.predicate()))) {
-    //     // TODO we need a better way to break outer loops, this shouldn't progress until complete...
-    //     await new Promise((resolve => {
-    //       setTimeout(() => {
-    //         this.executeStatement(repeatNode.body())
-    //         resolve(true)
-    //       }, 1000)
-    //     }))
-    //   }
-    // } else if (node instanceof ForNode) {
-    //   const forNode = node as ForNode
-    //   if (!(forNode.variable in this.variables)) {
-    //     this.variables[forNode.variable] = 0
-    //   }
-    //   for (this.variables[forNode.variable] = this.evaluateNode(forNode.start());
-    //        Number(this.variables[forNode.variable]) < Number(this.evaluateNode(forNode.end()));
-    //        this.variables[forNode.variable] += Number(this.evaluateNode(forNode.step()))) {
-    //     this.executeStatement(forNode.body())
-    //   }
-
-    if (node instanceof DispNode) {
-      const dispNode = node as DispNode
-      dispNode.args.arglist.forEach(argNode => {
-        this.homeScreen.display(this.evaluateNode(argNode))
-      })
-    } else if (node instanceof OutputNode) {
-      const outputNode = node as OutputNode
-      const body = this.evaluateNode(outputNode.expression)
-      this.homeScreen.output(outputNode.row, outputNode.col, body)
-    } else if (node instanceof ClrHomeNode) {
-      this.homeScreen.clear()
-    } else if (node instanceof InputNode) {
-      const args = (node as InputNode).args
-
-      // TODO handle invalid args?
-      let prompt
-      let identifier
-      if (args.arglist.length === 2) {
-        prompt = String(this.evaluateNode(args.arglist[0]))
-        identifier = (args.arglist[1] as IdentifierNode).identifier
-      } else {
-        prompt = '?'
-        identifier = (args.arglist[0] as IdentifierNode).identifier
-      }
-
-      const value: string | null = window.prompt(prompt, '')
-      if (value === null) {
-        // FIXME crash here?
-        console.error('User cancelled the prompt -- no input received')
-      } else {
-        this.variables[identifier] = value
-      }
-    } else if (node instanceof PromptNode) {
-      const promptNode = node as PromptNode
-      promptNode.variables.arglist.forEach(varNode => {
-        const identifier = (varNode as IdentifierNode).identifier
-        const value: string | null = window.prompt(`${identifier}=?`, '')
-
-        // TODO parse the input as a program? or something like that for better string handling?
-        if (value === null) {
-          // FIXME crash here?
-          console.error('User cancelled the prompt -- no input received')
-        } else if (!isNaN(Number(value))) {
-          this.variables[identifier] = Number(value)
-        } else if (value.length >= 3 && value.charAt(0) === '"' && value.charAt(value.length - 1) === '"') {
-          this.variables[identifier] = value.substring(1, value.length - 1)
-        } else {
-          // FIXME crash here?
-          console.error(`Received invalid user input: ${value}`)
-        }
-      })
-    } else if (node instanceof PrgmNode) {
-      // TODO
-    } else if (node instanceof LblNode) {
-      // ignored
-    } else if (node instanceof GotoNode) {
-      const label = (node as GotoNode).label
-      if (label in this.labels) {
-        this.position = this.labels[label]
-      } else {
-        throw new Error(`Goto undefined label: ${label}`)
-      }
-    } else {
-      // TODO set 'Ans' on every one of these?
-      this.variables['Ans'] = this.evaluateNode(node)
-    }
-  }
-
   private evaluateNode = (node: ASTNode): any => {
     if (node instanceof NumberNode) {
       return (node as NumberNode).value
@@ -464,7 +348,9 @@ export default class Interpreter {
       } else if (identifier in this.variables) {
         return this.variables[identifier]
       } else {
-        throw new Error(`Identifier '${identifier}' is not defined`)
+        // unused variables are initialized to 0 upon first access
+        this.variables[identifier] = 0
+        return this.variables[identifier]
       }
     } else if (node instanceof BinaryOpNode) {
       return this.interpretBinaryOpNode(node as BinaryOpNode)

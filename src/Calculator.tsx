@@ -3,6 +3,7 @@ import HomeScreen, { MAX_COLS, MAX_ROWS } from './tibasic/screen/HomeScreen'
 import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
 import Parser from './tibasic/parser/Parser'
+import FIDDLE_PRGM from './tibasic/programs/Fiddle'
 
 import './Calculator.css'
 import './fonts/ti-83-plus-large.ttf'
@@ -85,11 +86,15 @@ const MENU_PRGM = `
 Lbl 1
 ClrHome
 Disp "Hello"
-Pause "Press Enter..."
+Pause
 Menu("DEAL AGAIN?","YES",1,"LEAVE TABLE",99)
 Lbl 99
 Disp "End Game"
-Pause "Press Enter..."
+Pause
+`
+
+const LBL_PRGM = `
+Lbl 1A
 `
 
 type ScreenMode = 'Home' | 'Menu'
@@ -107,7 +112,7 @@ function Calculator() {
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(MENU_PRGM)
+      const tokens = new Scanner().scan(FIDDLE_PRGM)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(homeScreen, menuScreen, program))
       setScreenText(homeScreen.getChars())
