@@ -13,6 +13,6 @@ export default class PauseNode extends ASTNode {
 
   static parse = (parser: Parser): PauseNode => {
     parser.expectToken(TokenType.Identifier, "Pause")
-    return new PauseNode(ArgListNode.parse(parser))
+    return new PauseNode(new ArgListNode()) // TODO support arguments to pause
   }
 }
