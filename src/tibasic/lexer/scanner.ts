@@ -3,6 +3,7 @@ import { Token, TokenType } from './scanner.d'
 const WHITESPACE_RE = /\s/
 
 const ALPHANUMERIC_RE = /[a-zA-Z0-9.]/ // TODO theta?
+const NUMERIC_RE = /^(-)?[0-9]+(\.[0-9]+)?$/
 
 export default class Scanner {
   scan = (code: string): Array<Token> => {
@@ -47,7 +48,7 @@ export default class Scanner {
         result += readChar()
       }
 
-      if (!Number.isNaN(parseFloat(result))) {
+      if (NUMERIC_RE.test(result) && !Number.isNaN(parseFloat(result))) {
         return {
           type: TokenType.Number,
           value: parseFloat(result)
@@ -78,7 +79,7 @@ export default class Scanner {
               readChar()
               return { type: TokenType.Assignment, value: '->' }
             } else {
-              return { type: TokenType.Operation, value: '>' }
+              return { type: TokenType.Operation, value: '-' }
             }
           case '>':
             readChar()
