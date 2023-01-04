@@ -3,7 +3,6 @@ import Parser from './Parser'
 import { TokenType } from '../lexer/scanner.d'
 import ExpressionNode from './ExpressionNode'
 import NumberNode from './NumberNode'
-import StatementNode from './StatementNode'
 
 export default class ForNode extends ASTNode {
   readonly variable: string

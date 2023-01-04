@@ -53,11 +53,9 @@ export default class StatementNode extends ASTNode {
     } else if (parser.matchToken(TokenType.Identifier, 'Menu')) {
       return MenuNode.parse(parser)
     } else if (parser.acceptToken(TokenType.Identifier, 'Lbl')) {
-      // FIXME accept numeric labels
-      return new LblNode(parser.expectToken(TokenType.Identifier).value as string)
+      return LblNode.parse(parser)
     } else if (parser.acceptToken(TokenType.Identifier, 'Goto')) {
-      // FIXME accept numeric labels
-      return new GotoNode(parser.expectToken(TokenType.Identifier).value as string)
+      return GotoNode.parse(parser)
     } else {
       return ExpressionNode.parse(parser)
     }

@@ -30,15 +30,14 @@ export default class MenuNode extends ASTNode {
       const option = ExpressionNode.parse(parser)
       parser.expectToken(TokenType.Comma)
 
-      let label
+      let identifier
       try {
-        label = new LblNode(parser.expectToken(TokenType.Identifier).value as string)
+        identifier = parser.expectToken(TokenType.Identifier).value as string
       } catch (e) {
-        label = new LblNode(parser.expectToken(TokenType.Number).value as string)
-        console.log('Label', label)
+        identifier = String(Math.round(parser.expectToken(TokenType.Number).value as number))
       }
 
-      options.push({ option, label })
+      options.push({ option, label: new LblNode(identifier) })
     }
 
     // closing paren is optional?
