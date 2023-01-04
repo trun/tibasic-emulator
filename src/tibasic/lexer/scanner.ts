@@ -47,7 +47,6 @@ export default class Scanner {
         result += readChar()
       }
 
-      // FIXME -- sometimes labels are numeric?
       if (!Number.isNaN(parseFloat(result))) {
         return {
           type: TokenType.Number,

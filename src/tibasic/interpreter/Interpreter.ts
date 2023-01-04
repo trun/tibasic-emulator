@@ -30,9 +30,18 @@ type RunResult = { status: 'run' } |
   { status: 'pause' } |
   { status: 'menu' }
 
+type RunStatus = 'Run' | 'Input'
+type ScreenMode = 'Home' | 'Menu'
+
+type ExternalRunResult = {
+  status: RunStatus
+  screen: ScreenMode
+}
+
 export default class Interpreter {
   private readonly homeScreen: HomeScreen
   private readonly menuScreen: MenuScreen
+  private screenMode: ScreenMode = 'Home'
   private readonly variables: { [key: string]: any } = {
     'Ans': 0, // TODO - this should have a default?
     'True': true,
@@ -69,40 +78,63 @@ export default class Interpreter {
     this.scanLabels(lines)
   }
 
-  next = (): boolean => {
-    const node = this.lines[this.position]
+  next = (): ExternalRunResult => {
+    let node = this.lines[this.position]
 
     let result: RunResult
-    if (this.skippedBlockHeight !== undefined && this.blockStack.length >= this.skippedBlockHeight) {
-      result = this.skipLine(node)
+    if (this.screenMode === 'Menu') {
+      this.screenMode = 'Home'
+      const menuNode = node as MenuNode
+      const label = menuNode.options[this.menuScreen.getCurrentIndex()].label.label
+      result = { status: 'goto', label }
     } else {
-      this.skippedBlockHeight = undefined // no longer in skip mode
-      result = this.runLine(node)
+      if (this.skippedBlockHeight !== undefined && this.blockStack.length >= this.skippedBlockHeight) {
+        result = this.skipLine(node)
+      } else {
+        this.skippedBlockHeight = undefined // no longer in skip mode
+        result = this.runLine(node)
+      }
     }
+
+    let status: RunStatus
 
     switch (result.status) {
       case 'run':
         this.position++
+        status = 'Run'
         break
       case 'goto':
-        this.position = this.labels[result.label]
+        if (result.label in this.labels) {
+          this.position = this.labels[result.label]
+        } else {
+          console.error(`Tried to goto unknown label: ${result.label}`)
+          this.position = this.lines.length
+        }
+        status = 'Run'
         break
       case 'jump':
         this.position = result.position
+        status = 'Run'
         break
       case 'pause':
         this.position++
-        return false
+        this.screenMode = 'Home'
+        status = 'Input'
+        break;
       case 'menu':
-        this.position++
-        return false
+        this.screenMode = 'Menu'
+        status = 'Input'
+        break;
       case 'error':
         console.error(result.message)
         this.position = this.lines.length
+        status = 'Run'
         break
+      default:
+        throw new Error(`Unexpected run result: ${result.status}`)
     }
 
-    return true
+    return { status, screen: this.screenMode }
   }
 
   hasNext = (): boolean => {

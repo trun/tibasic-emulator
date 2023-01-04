@@ -82,13 +82,20 @@ OUTPUT(2,1,"END")
 `
 
 const MENU_PRGM = `
+Lbl 1
+ClrHome
+Disp "Hello"
+Pause "Press Enter..."
 Menu("DEAL AGAIN?","YES",1,"LEAVE TABLE",99)
+Lbl 99
+Disp "End Game"
+Pause "Press Enter..."
 `
 
 type ScreenMode = 'Home' | 'Menu'
 
 function Calculator() {
-  const [screenMode, setScreenMode] = useState<ScreenMode>('Menu')
+  const [screenMode, setScreenMode] = useState<ScreenMode>('Home')
   const [screenText, setScreenText] = useState(homeScreen.getChars())
   const [menuTitle, setMenuTitle] = useState(menuScreen.getTitle())
   const [menuLabels, setMenuLabels] = useState(menuScreen.getLabels())
@@ -124,9 +131,11 @@ function Calculator() {
 
     const interval = setInterval(() => {
       if (running && interpreter.hasNext()) {
-        if (!interpreter.next()) {
+        const nextStatus = interpreter.next()
+        if (nextStatus.status !== 'Run') {
           setRunning(false)
         }
+        setScreenMode(nextStatus.screen)
       }
       setScreenText(homeScreen.getChars())
       setMenuTitle(menuScreen.getTitle())
