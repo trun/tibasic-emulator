@@ -56,6 +56,31 @@ OUTPUT(1,1,X/1000)
 END
 `
 
+const IF_PRGM = `
+LBL HOME
+REPEAT Ans
+getKey
+END
+Ans -> K
+OUTPUT(1,1,"YOUR KEY: ")
+OUTPUT(1,11,"   ")
+IF K = 24
+THEN
+OUTPUT(1,11,"<--")
+ELSE
+OUTPUT(1,11,K)
+END
+GOTO HOME
+`
+
+const WHILE_PRGM = `
+1 -> X
+WHILE X < 0
+OUTPUT(1,1,"LOOP")
+END
+OUTPUT(2,1,"END")
+`
+
 type ScreenMode = 'Home' | 'Menu'
 
 function Calculator() {
@@ -71,7 +96,7 @@ function Calculator() {
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(PRINT_KEY_PRGM)
+      const tokens = new Scanner().scan(WHILE_PRGM)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(homeScreen, menuScreen, program))
       setScreenText(homeScreen.getChars())

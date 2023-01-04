@@ -18,6 +18,7 @@ import MenuNode from './MenuNode'
 import EndNode from './EndNode'
 import ThenNode from './ThenNode'
 import PauseNode from './PauseNode'
+import ElseNode from './ElseNode'
 
 export default class StatementNode extends ASTNode {
   static parse = (parser: Parser): ASTNode => {
@@ -25,6 +26,8 @@ export default class StatementNode extends ASTNode {
       return IfNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Then')) {
       return ThenNode.parse(parser)
+    } else if (parser.matchToken(TokenType.Identifier, 'Else')) {
+      return ElseNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'While')) {
       return WhileNode.parse(parser)
     } else if (parser.matchToken(TokenType.Identifier, 'Repeat')) {

@@ -20,6 +20,7 @@ import HomeScreen from '../screen/HomeScreen'
 import PauseNode from '../parser/PauseNode'
 import MenuScreen from '../screen/MenuScreen'
 import MenuNode from '../parser/MenuNode'
+import IfNode from '../parser/IfNode'
 
 type RunResult = { status: 'run' } |
   { status: 'goto', label: string } |
@@ -48,6 +49,7 @@ export default class Interpreter {
   private blockStack: number[] = []
   private skippedBlockHeight: number | undefined = undefined
   private forLoopInitialization: { [position: number]: boolean } = {}
+  private ifElsePredicates: { [position: number]: boolean } = {}
   private lastKey: number = 0
 
   // TODO use this for callbacks?
@@ -71,7 +73,7 @@ export default class Interpreter {
     const node = this.lines[this.position]
 
     let result: RunResult
-    if (this.skippedBlockHeight !== undefined && this.blockStack.length > this.skippedBlockHeight) {
+    if (this.skippedBlockHeight !== undefined && this.blockStack.length >= this.skippedBlockHeight) {
       result = this.skipLine(node)
     } else {
       this.skippedBlockHeight = undefined // no longer in skip mode
@@ -116,6 +118,12 @@ export default class Interpreter {
       case 'Then':
         this.blockStack.push(this.position)
         return { status: 'run' }
+      case 'Else':
+        this.blockStack.pop()
+        this.blockStack.push(this.position)
+        // if you hit the else in a skip you should un-skip
+        delete this.skippedBlockHeight
+        return { status: 'run' }
       case 'End':
         this.blockStack.pop()
         return { status: 'run' }
@@ -155,6 +163,41 @@ export default class Interpreter {
         }
         this.blockStack.push(this.position)
         return { status: 'run' }
+      case 'If':
+        const ifNode = node as IfNode
+        const predicate = Boolean(this.evaluateNode(ifNode.predicate))
+
+        // if-then-else
+        if (this.lines[this.position + 1].type === 'Then') {
+          this.blockStack.push(this.position)
+          this.ifElsePredicates[this.position] = predicate
+          this.position += 1 // skip the 'Then' line
+          if (predicate) {
+            return { status: 'run' }
+          } else {
+            this.skippedBlockHeight = this.blockStack.length
+            return { status: 'run' }
+          }
+        }
+        // if
+        else {
+          if (predicate) {
+            return { status: 'run' }
+          } else {
+            this.position += 1 // skip next line
+            return { status: 'run' }
+          }
+        }
+      case 'Else':
+        const ifBlockPosition: number = this.blockStack.pop() as number
+        this.blockStack.push(this.position)
+        if (this.ifElsePredicates[ifBlockPosition]) {
+          this.skippedBlockHeight = this.blockStack.length
+        }
+        delete this.ifElsePredicates[ifBlockPosition]
+        return { status: 'run' }
+      case 'Then':
+        return { status: 'run' } // skip
 
       case 'End':
         const lastBlockPosition: number = this.blockStack.pop() as number
@@ -183,6 +226,8 @@ export default class Interpreter {
             delete this.forLoopInitialization[this.position]
             return { status: 'run' }
           }
+        } else if (lastNode.type === 'Else' || lastNode.type === 'If') {
+          return { status: 'run' }
         } else {
           return { status: 'error', message: `Reached END for unimplemented block node: ${lastNode.type}` }
         }
