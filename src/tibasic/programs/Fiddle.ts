@@ -31,7 +31,7 @@ Pause
 If S<=0
 Then
 \tOutput(4,4,"SORRY MAN."
-\tOutput(5,3,"YOU'RE BROKE.
+\tOutput(5,3,"YOU'RE BROKE."
 \tPause 
 \tGoto 99
 End
