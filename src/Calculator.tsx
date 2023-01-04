@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import HomeScreen, { MAX_COLS } from './tibasic/screen/HomeScreen'
+import HomeScreen, { MAX_COLS, MAX_ROWS } from './tibasic/screen/HomeScreen'
 import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
 import Parser from './tibasic/parser/Parser'
@@ -81,10 +81,14 @@ END
 OUTPUT(2,1,"END")
 `
 
+const MENU_PRGM = `
+Menu("DEAL AGAIN?","YES",1,"LEAVE TABLE",99)
+`
+
 type ScreenMode = 'Home' | 'Menu'
 
 function Calculator() {
-  const [screenMode, setScreenMode] = useState<ScreenMode>('Home')
+  const [screenMode, setScreenMode] = useState<ScreenMode>('Menu')
   const [screenText, setScreenText] = useState(homeScreen.getChars())
   const [menuTitle, setMenuTitle] = useState(menuScreen.getTitle())
   const [menuLabels, setMenuLabels] = useState(menuScreen.getLabels())
@@ -96,15 +100,19 @@ function Calculator() {
   const handleExecute = (e: any) => {
     e.preventDefault()
     if (input === '') {
-      const tokens = new Scanner().scan(WHILE_PRGM)
+      const tokens = new Scanner().scan(MENU_PRGM)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(homeScreen, menuScreen, program))
       setScreenText(homeScreen.getChars())
+      setMenuTitle(menuScreen.getTitle())
+      setMenuLabels(menuScreen.getLabels())
     } else {
       const tokens = new Scanner().scan(input)
       const program = new Parser(tokens).parse()
       setInterpreter(new Interpreter(homeScreen, menuScreen, program))
       setScreenText(homeScreen.getChars())
+      setMenuTitle(menuScreen.getTitle())
+      setMenuLabels(menuScreen.getLabels())
       setInput('')
     }
   }
@@ -119,34 +127,97 @@ function Calculator() {
         if (!interpreter.next()) {
           setRunning(false)
         }
-        setScreenText(homeScreen.getChars())
       }
+      setScreenText(homeScreen.getChars())
+      setMenuTitle(menuScreen.getTitle())
+      setMenuLabels(menuScreen.getLabels())
+      setMenuCurrentIndex(menuScreen.getCurrentIndex())
     }, TICK_SPEED_MS)
     return () => clearInterval(interval);
   }, [interpreter, running])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.code in SIMPLIFIED_KEY_MAP) {
-      interpreter?.setLastKey(SIMPLIFIED_KEY_MAP[e.code])
-    }
+    if (screenMode === 'Menu') {
+      if (e.code === 'ArrowUp') {
+        menuScreen.prevOption()
+      } else if (e.code === 'ArrowDown') {
+        menuScreen.nextOption()
+      } else if (e.code === 'Enter') {
+        setRunning(true) // resume
+      } else if (e.code.startsWith('Digit')) {
+        const index = parseInt(e.code.substring(5)) - 1
+        if (index < menuScreen.getLabels().length) {
+          menuScreen.setCurrentIndex(index)
+          setRunning(true)
+        }
+      }
+    } else {
+      if (e.code in SIMPLIFIED_KEY_MAP) {
+        interpreter?.setLastKey(SIMPLIFIED_KEY_MAP[e.code])
+      }
 
-    if (e.code === 'Enter' && !running) {
-      setRunning(true)
+      if (e.code === 'Enter' && !running) {
+        setRunning(true)
+      }
     }
   }
 
   return (
     <div className="calculator">
-      <div className="screen" onKeyDown={handleKeyDown} tabIndex={0}>
-        {screenText.split('').map((char, i) => (
-          <div key={i} className="screen-cell" style={{
-            gridColumn: `${(i % MAX_COLS) + 1} / ${(i % MAX_COLS) + 1}`,
-            gridRow: `${Math.floor(i / MAX_COLS) + 1} / ${Math.floor(i / MAX_COLS) + 1}`,
-          }}>
-            {char}
-          </div>
-        ))}
-      </div>
+      {screenMode === 'Home' ? (
+        <div className="screen" onKeyDown={handleKeyDown} tabIndex={0}>
+          {screenText.split('').map((char, i) => (
+            <div key={i} className="screen-cell" style={{
+              gridColumn: `${(i % MAX_COLS) + 1} / ${(i % MAX_COLS) + 1}`,
+              gridRow: `${Math.floor(i / MAX_COLS) + 1} / ${Math.floor(i / MAX_COLS) + 1}`,
+            }}>
+              {char}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="screen" onKeyDown={handleKeyDown} tabIndex={0}>
+          {[...Array(MAX_COLS).keys()].map(i => {
+            const inverted = !!menuTitle.charAt(i)
+            return (
+              <div key={i} className={`screen-cell ${inverted && 'inverted'}`} style={{
+                gridColumn: `${(i % MAX_COLS) + 1} / ${(i % MAX_COLS) + 1}`,
+                gridRow: `${Math.floor(i / MAX_COLS) + 1} / ${Math.floor(i / MAX_COLS) + 1}`,
+              }}>
+                {menuTitle.charAt(i)}
+              </div>
+            )
+          })}
+          {[...Array(MAX_ROWS - 1).keys()].map(row => {
+            const label = menuLabels[row]
+            const selected = menuCurrentIndex === row
+            return (
+              [...Array(MAX_COLS).keys()].map(col => {
+                if (label) {
+                  const inverted = col <= 1 && selected
+                  return (
+                    <div key={`${row},${col}`} className={`screen-cell ${inverted && 'inverted'}`} style={{
+                      gridColumn: `${col + 1} / ${col + 1}`,
+                      gridRow: `${row + 2} / ${row + 2}`,
+                    }}>
+                      {col === 0 && (row + 1)}
+                      {col === 1 && ':'}
+                      {col > 1 && label.charAt(col - 2)}
+                    </div>
+                  )
+                } else {
+                  return (
+                    <div key={`${row},${col}`} className="screen-cell" style={{
+                      gridColumn: `${col + 1} / ${col + 1}`,
+                      gridRow: `${row + 2} / ${row + 2}`,
+                    }}>&nbsp;</div>
+                  )
+                }
+              })
+            )
+          })}
+        </div>
+      )}
       <form className="repl" onSubmit={handleExecute}>
         <input type="text" value={input} onChange={e => setInput(e.target.value)} />
         <button onClick={handleExecute}>Run</button>

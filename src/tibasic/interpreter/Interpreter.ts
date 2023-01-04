@@ -93,6 +93,9 @@ export default class Interpreter {
       case 'pause':
         this.position++
         return false
+      case 'menu':
+        this.position++
+        return false
       case 'error':
         console.error(result.message)
         this.position = this.lines.length

@@ -29,7 +29,15 @@ export default class MenuNode extends ASTNode {
     while (parser.acceptToken(TokenType.Comma)) {
       const option = ExpressionNode.parse(parser)
       parser.expectToken(TokenType.Comma)
-      const label = new LblNode(parser.expectToken(TokenType.Identifier).value as string)
+
+      let label
+      try {
+        label = new LblNode(parser.expectToken(TokenType.Identifier).value as string)
+      } catch (e) {
+        label = new LblNode(parser.expectToken(TokenType.Number).value as string)
+        console.log('Label', label)
+      }
+
       options.push({ option, label })
     }
 

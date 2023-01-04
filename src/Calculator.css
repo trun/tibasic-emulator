@@ -10,8 +10,8 @@
 
 .screen {
   display: grid;
-  gap: 2px;
-  width: calc(15 * 2px + 16 * 14px);
+  gap: 0;
+  width: calc(16 * 13px);
   margin-bottom: 10px;
   border: 2px solid #999;
   box-shadow: 2px 2px 2px #999;
@@ -27,13 +27,16 @@
   justify-content: center;
   width: 13px;
   height: 17px;
-  padding-top: 1px;
-  padding-left: 1px;
+}
+
+.screen-cell.inverted {
+  background-color: #333;
+  color: white;
 }
 
 .repl {
   display: flex;
-  width: 258px;
+  width: calc(16 * 13px + 4px);
   font-family: monospace;
   font-weight: 500;
   font-size: 12px;

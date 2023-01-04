@@ -21,6 +21,10 @@ export default class MenuScreen {
     return this.currentIndex
   }
 
+  setCurrentIndex = (index: number): void => {
+    this.currentIndex = index
+  }
+
   nextOption = (): void => {
     this.currentIndex = (this.currentIndex + 1) % this.labels.length
   }
