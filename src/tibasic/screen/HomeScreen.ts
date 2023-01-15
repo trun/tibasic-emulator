@@ -4,11 +4,18 @@ const EMPTY_LINE: string = ' '.repeat(MAX_COLS)
 
 export default class HomeScreen {
   private chars: string = HomeScreen.makeEmptyLines()
+  private cursor: number = 0
 
   output = (row: number, col:number, value: any): void => {
     const offset = this.offset(row, col)
     const line = String(value)
     this.chars = this.chars.substring(0, offset) + line + this.chars.substring(offset + line.length)
+    this.cursor = offset + line.length
+  }
+
+  private shiftUp = (): void => {
+    this.chars = this.chars.substring(MAX_COLS) + HomeScreen.makeEmptyLine()
+    this.cursor -= MAX_COLS
   }
 
   display = (value: any): void => {
@@ -23,10 +30,15 @@ export default class HomeScreen {
 
   clear = (): void => {
     this.chars = HomeScreen.makeEmptyLines()
+    this.cursor = 0
   }
 
   getChars = (): string => {
     return this.chars
+  }
+
+  getCursor = (): number => {
+    return this.cursor
   }
 
   private displayNumber = (value: number): void => {
@@ -50,17 +62,11 @@ export default class HomeScreen {
       }
     }
 
-    // TODO need to fix scrolling behavior?
-    // if (row === MAX_ROWS) {
-    //   this.chars = HomeScreen.makeEmptyLines()
-    //   row = 1
-    // }
-
     this.output(row, 1, line)
 
     // if all lines have text now, scroll
     if (row >= MAX_ROWS) {
-      this.chars = this.chars.substring(MAX_COLS) + HomeScreen.makeEmptyLine()
+      this.shiftUp()
     }
   }
 
@@ -79,6 +85,6 @@ export default class HomeScreen {
   }
 
   static makeEmptyLines = (): string => {
-    return ' '.repeat(MAX_ROWS * MAX_COLS)
+    return HomeScreen.makeEmptyLine().repeat(MAX_ROWS)
   }
 }

@@ -105,8 +105,10 @@ Disp randInt(2,11)
 type ScreenMode = 'Home' | 'Menu'
 
 function Calculator() {
+  const [debounceKey, setDebounceKey] = useState<string | null>(null)
   const [screenMode, setScreenMode] = useState<ScreenMode>('Home')
   const [screenText, setScreenText] = useState(homeScreen.getChars())
+  const [screenCursor, setScreenCursor] = useState(homeScreen.getCursor())
   const [menuTitle, setMenuTitle] = useState(menuScreen.getTitle())
   const [menuLabels, setMenuLabels] = useState(menuScreen.getLabels())
   const [menuCurrentIndex, setMenuCurrentIndex] = useState(menuScreen.getCurrentIndex())
@@ -118,6 +120,7 @@ function Calculator() {
     const program = new Parser(tokens).parse()
     setInterpreter(new Interpreter(homeScreen, menuScreen, program))
     setScreenText(homeScreen.getChars())
+    setScreenCursor(homeScreen.getCursor())
     setMenuTitle(menuScreen.getTitle())
     setMenuLabels(menuScreen.getLabels())
   }, [])
@@ -136,6 +139,7 @@ function Calculator() {
         setScreenMode(nextStatus.screen)
       }
       setScreenText(homeScreen.getChars())
+      setScreenCursor(homeScreen.getCursor())
       setMenuTitle(menuScreen.getTitle())
       setMenuLabels(menuScreen.getLabels())
       setMenuCurrentIndex(menuScreen.getCurrentIndex())
@@ -144,12 +148,14 @@ function Calculator() {
   }, [interpreter, running])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.code === debounceKey) {
+      return
+    }
+
+    setDebounceKey(e.code)
+
     if (screenMode === 'Menu') {
-      if (e.code === 'ArrowUp') {
-        menuScreen.prevOption()
-      } else if (e.code === 'ArrowDown') {
-        menuScreen.nextOption()
-      } else if (e.code === 'Enter') {
+      if (e.code === 'Enter') {
         setRunning(true)
       } else if (e.code.startsWith('Digit')) {
         const index = parseInt(e.code.substring(5)) - 1
@@ -169,6 +175,12 @@ function Calculator() {
     }
   }
 
+  const handleKeyUp = (e: React.KeyboardEvent) => {
+    if (e.code === debounceKey) {
+      setDebounceKey(null)
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (screenMode === 'Menu') {
       if (e.code === 'ArrowUp') {
@@ -182,9 +194,9 @@ function Calculator() {
   return (
     <div className="calculator">
       {screenMode === 'Home' ? (
-        <div className="screen" onKeyPress={handleKeyPress} tabIndex={0}>
+        <div className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} tabIndex={0}>
           {screenText.split('').map((char, i) => (
-            <div key={i} className="screen-cell" style={{
+            <div key={i} className={`screen-cell ${screenCursor === i && 'inverted'}`} style={{
               gridColumn: `${(i % MAX_COLS) + 1} / ${(i % MAX_COLS) + 1}`,
               gridRow: `${Math.floor(i / MAX_COLS) + 1} / ${Math.floor(i / MAX_COLS) + 1}`,
             }}>
@@ -193,7 +205,7 @@ function Calculator() {
           ))}
         </div>
       ) : (
-        <div className="screen" onKeyPress={handleKeyPress} onKeyDown={handleKeyDown} tabIndex={0}>
+        <div className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
           {[...Array(MAX_COLS).keys()].map(i => {
             const inverted = !!menuTitle.charAt(i)
             return (
