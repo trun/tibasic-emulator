@@ -4,6 +4,7 @@ import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
 import Parser from './tibasic/parser/Parser'
 import FIDDLE_PRGM from './tibasic/programs/Fiddle'
+import SLOTS_PRGM from './tibasic/programs/Slots'
 
 import './Calculator.css'
 import './fonts/ti-83-plus-large.ttf'
@@ -97,6 +98,10 @@ const LBL_PRGM = `
 Lbl 1A
 `
 
+const RANDINT_PRGM = `
+Disp randInt(2,11)
+`
+
 type ScreenMode = 'Home' | 'Menu'
 
 function Calculator() {
@@ -107,27 +112,15 @@ function Calculator() {
   const [menuCurrentIndex, setMenuCurrentIndex] = useState(menuScreen.getCurrentIndex())
   const [interpreter, setInterpreter] = useState<Interpreter>()
   const [running, setRunning] = useState<boolean>(true)
-  const [input, setInput] = useState('')
 
-  const handleExecute = (e: any) => {
-    e.preventDefault()
-    if (input === '') {
-      const tokens = new Scanner().scan(FIDDLE_PRGM)
-      const program = new Parser(tokens).parse()
-      setInterpreter(new Interpreter(homeScreen, menuScreen, program))
-      setScreenText(homeScreen.getChars())
-      setMenuTitle(menuScreen.getTitle())
-      setMenuLabels(menuScreen.getLabels())
-    } else {
-      const tokens = new Scanner().scan(input)
-      const program = new Parser(tokens).parse()
-      setInterpreter(new Interpreter(homeScreen, menuScreen, program))
-      setScreenText(homeScreen.getChars())
-      setMenuTitle(menuScreen.getTitle())
-      setMenuLabels(menuScreen.getLabels())
-      setInput('')
-    }
-  }
+  useEffect(() => {
+    const tokens = new Scanner().scan(SLOTS_PRGM)
+    const program = new Parser(tokens).parse()
+    setInterpreter(new Interpreter(homeScreen, menuScreen, program))
+    setScreenText(homeScreen.getChars())
+    setMenuTitle(menuScreen.getTitle())
+    setMenuLabels(menuScreen.getLabels())
+  }, [])
 
   useEffect(() => {
     if (!interpreter) {
@@ -150,14 +143,14 @@ function Calculator() {
     return () => clearInterval(interval);
   }, [interpreter, running])
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (screenMode === 'Menu') {
       if (e.code === 'ArrowUp') {
         menuScreen.prevOption()
       } else if (e.code === 'ArrowDown') {
         menuScreen.nextOption()
       } else if (e.code === 'Enter') {
-        setRunning(true) // resume
+        setRunning(true)
       } else if (e.code.startsWith('Digit')) {
         const index = parseInt(e.code.substring(5)) - 1
         if (index < menuScreen.getLabels().length) {
@@ -176,10 +169,20 @@ function Calculator() {
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (screenMode === 'Menu') {
+      if (e.code === 'ArrowUp') {
+        menuScreen.prevOption()
+      } else if (e.code === 'ArrowDown') {
+        menuScreen.nextOption()
+      }
+    }
+  }
+
   return (
     <div className="calculator">
       {screenMode === 'Home' ? (
-        <div className="screen" onKeyDown={handleKeyDown} tabIndex={0}>
+        <div className="screen" onKeyPress={handleKeyPress} tabIndex={0}>
           {screenText.split('').map((char, i) => (
             <div key={i} className="screen-cell" style={{
               gridColumn: `${(i % MAX_COLS) + 1} / ${(i % MAX_COLS) + 1}`,
@@ -190,7 +193,7 @@ function Calculator() {
           ))}
         </div>
       ) : (
-        <div className="screen" onKeyDown={handleKeyDown} tabIndex={0}>
+        <div className="screen" onKeyPress={handleKeyPress} onKeyDown={handleKeyDown} tabIndex={0}>
           {[...Array(MAX_COLS).keys()].map(i => {
             const inverted = !!menuTitle.charAt(i)
             return (
@@ -232,10 +235,6 @@ function Calculator() {
           })}
         </div>
       )}
-      <form className="repl" onSubmit={handleExecute}>
-        <input type="text" value={input} onChange={e => setInput(e.target.value)} />
-        <button onClick={handleExecute}>Run</button>
-      </form>
     </div>
   )
 }

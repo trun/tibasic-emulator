@@ -17,6 +17,10 @@ import PauseNode from '../parser/PauseNode'
 import MenuScreen from '../screen/MenuScreen'
 import MenuNode from '../parser/MenuNode'
 import IfNode from '../parser/IfNode'
+import PromptNode from '../parser/PromptNode'
+import InputNode from '../parser/InputNode'
+
+const QUOTED_STRING_RE = /^"([^"]+)"$/
 
 type RunResult = { status: 'run' } |
   { status: 'goto', label: string } |
@@ -24,6 +28,7 @@ type RunResult = { status: 'run' } |
   { status: 'skip', position: number } |
   { status: 'error', message: string } |
   { status: 'pause' } |
+  { status: 'input', callback: (value: string) => void } |
   { status: 'menu' }
 
 type RunStatus = 'Run' | 'Input'
@@ -32,6 +37,7 @@ type ScreenMode = 'Home' | 'Menu'
 type ExternalRunResult = {
   status: RunStatus
   screen: ScreenMode
+  callback?: (value: string) => void
 }
 
 export default class Interpreter {
@@ -93,6 +99,7 @@ export default class Interpreter {
     }
 
     let status: RunStatus
+    let callback
 
     switch (result.status) {
       case 'run':
@@ -114,10 +121,15 @@ export default class Interpreter {
         break
       case 'pause':
         this.position++
-        this.screenMode = 'Home'
+        status = 'Input'
+        break;
+      case 'input':
+        this.position++
+        callback = result.callback
         status = 'Input'
         break;
       case 'menu':
+        // don't advance position because it's handled on the next iteration
         this.screenMode = 'Menu'
         status = 'Input'
         break;
@@ -130,7 +142,11 @@ export default class Interpreter {
         throw new Error(`Unexpected run result: ${result.status}`)
     }
 
-    return { status, screen: this.screenMode }
+    return {
+      status,
+      screen: this.screenMode,
+      callback,
+    }
   }
 
   hasNext = (): boolean => {
@@ -276,7 +292,29 @@ export default class Interpreter {
         this.homeScreen.output(outputNode.row, outputNode.col, body)
         return { status: 'run' }
       case 'Input':
-        return { status: 'run' } // FIXME
+        const args = (node as InputNode).args
+
+        // TODO handle invalid args?
+        let prompt
+        let identifier
+        if (args.arglist.length === 2) {
+          prompt = String(this.evaluateNode(args.arglist[0]))
+          identifier = (args.arglist[1] as IdentifierNode).identifier
+        } else {
+          prompt = '?'
+          identifier = (args.arglist[0] as IdentifierNode).identifier
+        }
+
+        const value: string | null = window.prompt(prompt, '')
+        if (value === null) {
+          // FIXME crash here?
+          console.error('User cancelled the prompt -- no input received')
+        } else if (QUOTED_STRING_RE.test(value)) {
+          this.variables[identifier] = QUOTED_STRING_RE.exec(value)![1]
+        } else {
+          this.variables[identifier] = parseFloat(value)
+        }
+        return { status: 'run' }
       case 'ClrHome':
         this.homeScreen.clear()
         return { status: 'run' }
