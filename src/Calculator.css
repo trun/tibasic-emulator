@@ -11,7 +11,7 @@
 .screen {
   display: grid;
   gap: 0;
-  width: calc(16 * 13px);
+  width: calc(16 * 26px);
   margin-bottom: 10px;
   border: 2px solid #999;
   box-shadow: 2px 2px 2px #999;
@@ -20,13 +20,13 @@
 .screen-cell {
   font-family: "ti-83-plus-large", monospace;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 24px;
   background-color: #fafafa;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 13px;
-  height: 17px;
+  width: 26px;
+  height: 34px;
 }
 
 .screen-cell.inverted {
@@ -36,10 +36,10 @@
 
 .repl {
   display: flex;
-  width: calc(16 * 13px + 4px);
+  width: calc(16 * 26px + 8px);
   font-family: monospace;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 24px;
   background-color: #fafafa;
 }
 
