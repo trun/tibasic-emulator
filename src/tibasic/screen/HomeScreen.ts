@@ -46,9 +46,7 @@ export default class HomeScreen {
   }
 
   private displayString = (line: string): void => {
-    if (line.length <= MAX_COLS) {
-      line = line.padEnd(MAX_COLS, ' ')
-    } else {
+    if (line.length > MAX_COLS) {
       line = line.substr(0, MAX_COLS - 3) + '...'
     }
 
@@ -62,6 +60,7 @@ export default class HomeScreen {
       }
     }
 
+    this.output(row, 1, HomeScreen.makeEmptyLine())
     this.output(row, 1, line)
 
     // if all lines have text now, scroll

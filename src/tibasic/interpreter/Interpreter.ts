@@ -31,13 +31,12 @@ type RunResult = { status: 'run' } |
   { status: 'input', callback: (value: string) => void } |
   { status: 'menu' }
 
-type RunStatus = 'Run' | 'Input'
+type RunStatus = 'Run' | 'Input' | 'Pause'
 type ScreenMode = 'Home' | 'Menu'
 
 type ExternalRunResult = {
   status: RunStatus
   screen: ScreenMode
-  callback?: (value: string) => void
 }
 
 export default class Interpreter {
@@ -63,8 +62,7 @@ export default class Interpreter {
   private ifElsePredicates: { [position: number]: boolean } = {}
   private lastKey: number = 0
 
-  // TODO use this for callbacks?
-  input: string = ''
+  private inputCallback: ((value: string) => void) | null = null
 
   constructor(homeScreen: HomeScreen, menuScreen: MenuScreen, lines: ASTNode[]) {
     this.homeScreen = homeScreen
@@ -99,7 +97,7 @@ export default class Interpreter {
     }
 
     let status: RunStatus
-    let callback
+    this.inputCallback = null
 
     switch (result.status) {
       case 'run':
@@ -121,11 +119,11 @@ export default class Interpreter {
         break
       case 'pause':
         this.position++
-        status = 'Input'
+        status = 'Pause'
         break;
       case 'input':
         this.position++
-        callback = result.callback
+        this.inputCallback = result.callback
         status = 'Input'
         break;
       case 'menu':
@@ -145,7 +143,6 @@ export default class Interpreter {
     return {
       status,
       screen: this.screenMode,
-      callback,
     }
   }
 
@@ -155,6 +152,10 @@ export default class Interpreter {
 
   setLastKey = (lastKey: number): void => {
     this.lastKey = lastKey
+  }
+
+  setInput = (value: string): void => {
+    this.inputCallback && this.inputCallback(value)
   }
 
   private skipLine = (node: ASTNode): RunResult => {
@@ -292,29 +293,29 @@ export default class Interpreter {
         this.homeScreen.output(outputNode.row, outputNode.col, body)
         return { status: 'run' }
       case 'Input':
-        const args = (node as InputNode).args
+        const inputArgs = (node as InputNode).args
 
-        // TODO handle invalid args?
-        let prompt
-        let identifier
-        if (args.arglist.length === 2) {
-          prompt = String(this.evaluateNode(args.arglist[0]))
-          identifier = (args.arglist[1] as IdentifierNode).identifier
+        let prompt: string
+        let identifier: string
+        if (inputArgs.arglist.length === 2) {
+          prompt = String(this.evaluateNode(inputArgs.arglist[0]))
+          identifier = (inputArgs.arglist[1] as IdentifierNode).identifier
         } else {
           prompt = '?'
-          identifier = (args.arglist[0] as IdentifierNode).identifier
+          identifier = (inputArgs.arglist[0] as IdentifierNode).identifier
         }
 
-        const value: string | null = window.prompt(prompt, '')
-        if (value === null) {
-          // FIXME crash here?
-          console.error('User cancelled the prompt -- no input received')
-        } else if (QUOTED_STRING_RE.test(value)) {
-          this.variables[identifier] = QUOTED_STRING_RE.exec(value)![1]
-        } else {
-          this.variables[identifier] = parseFloat(value)
+        this.homeScreen.display(prompt)
+        const callback = (value: string) => {
+          value = value || '0' // FIXME default to 0 for simplicity
+          if (QUOTED_STRING_RE.test(value)) {
+            this.variables[identifier] = QUOTED_STRING_RE.exec(value)![1]
+          } else {
+            this.variables[identifier] = parseFloat(value)
+          }
         }
-        return { status: 'run' }
+
+        return { status: 'input', callback }
       case 'ClrHome':
         this.homeScreen.clear()
         return { status: 'run' }

@@ -3,7 +3,7 @@ import HomeScreen, { MAX_COLS, MAX_ROWS } from './tibasic/screen/HomeScreen'
 import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
 import Parser from './tibasic/parser/Parser'
-import FIDDLE_PRGM from './tibasic/programs/Fiddle'
+import BLACKJACK_PRGM from './tibasic/programs/Blackjack'
 import SLOTS_PRGM from './tibasic/programs/Slots'
 
 import './Calculator.css'
@@ -102,18 +102,20 @@ const RANDINT_PRGM = `
 Disp randInt(2,11)
 `
 
+type RunMode = 'Run' | 'Pause' | 'Input'
 type ScreenMode = 'Home' | 'Menu'
 
 function Calculator() {
   const [debounceKey, setDebounceKey] = useState<string | null>(null)
   const [screenMode, setScreenMode] = useState<ScreenMode>('Home')
   const [screenText, setScreenText] = useState(homeScreen.getChars())
+  const [screenInput, setScreenInput] = useState('')
   const [screenCursor, setScreenCursor] = useState(homeScreen.getCursor())
   const [menuTitle, setMenuTitle] = useState(menuScreen.getTitle())
   const [menuLabels, setMenuLabels] = useState(menuScreen.getLabels())
   const [menuCurrentIndex, setMenuCurrentIndex] = useState(menuScreen.getCurrentIndex())
   const [interpreter, setInterpreter] = useState<Interpreter>()
-  const [running, setRunning] = useState<boolean>(true)
+  const [runMode, setRunMode] = useState<RunMode>('Run')
 
   useEffect(() => {
     const tokens = new Scanner().scan(SLOTS_PRGM)
@@ -131,10 +133,14 @@ function Calculator() {
     }
 
     const interval = setInterval(() => {
-      if (running && interpreter.hasNext()) {
+      if (runMode === 'Run' && interpreter.hasNext()) {
         const nextStatus = interpreter.next()
-        if (nextStatus.status !== 'Run') {
-          setRunning(false)
+        if (nextStatus.status === 'Input') {
+          setRunMode('Input')
+        } else if (nextStatus.status === 'Pause') {
+          setRunMode('Pause')
+        } else {
+          setRunMode('Run')
         }
         setScreenMode(nextStatus.screen)
       }
@@ -145,7 +151,7 @@ function Calculator() {
       setMenuCurrentIndex(menuScreen.getCurrentIndex())
     }, TICK_SPEED_MS)
     return () => clearInterval(interval);
-  }, [interpreter, running])
+  }, [interpreter, runMode])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.code === debounceKey) {
@@ -156,24 +162,37 @@ function Calculator() {
 
     if (screenMode === 'Menu') {
       if (e.code === 'Enter') {
-        setRunning(true)
+        setRunMode('Run')
       } else if (e.code.startsWith('Digit')) {
         const index = parseInt(e.code.substring(5)) - 1
         if (index < menuScreen.getLabels().length) {
           menuScreen.setCurrentIndex(index)
-          setRunning(true)
+          setRunMode('Run')
         }
       }
-    } else {
+    } else if (screenMode === 'Home') {
       if (e.code in SIMPLIFIED_KEY_MAP) {
         interpreter?.setLastKey(SIMPLIFIED_KEY_MAP[e.code])
       }
 
-      if (e.code === 'Enter' && !running) {
-        setRunning(true)
+      if (runMode === 'Input') {
+        if (e.code.startsWith('Digit')) {
+          const number = parseInt(e.code.substring(5))
+          setScreenInput(screenInput + String(number))
+        }
+      }
+
+      if (runMode !== 'Run' && e.code === 'Enter') {
+        interpreter?.setInput(screenInput)
+        setScreenInput('')
+        setRunMode('Run')
       }
     }
   }
+
+  const combinedScreenText = screenText.substring(0, screenCursor) +
+    screenInput + screenText.substring(screenCursor + screenInput.length)
+  const combinedScreenCursor = screenCursor + screenInput.length
 
   const handleKeyUp = (e: React.KeyboardEvent) => {
     if (e.code === debounceKey) {
@@ -188,15 +207,19 @@ function Calculator() {
       } else if (e.code === 'ArrowDown') {
         menuScreen.nextOption()
       }
+    } else if (screenMode === 'Home') {
+      if (e.code === 'Backspace') {
+        setScreenInput(screenInput.substring(0, screenInput.length - 1))
+      }
     }
   }
 
   return (
     <div className="calculator">
       {screenMode === 'Home' ? (
-        <div className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} tabIndex={0}>
-          {screenText.split('').map((char, i) => (
-            <div key={i} className={`screen-cell ${screenCursor === i && 'inverted'}`} style={{
+        <div key="screen" className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
+          {combinedScreenText.split('').map((char, i) => (
+            <div key={i} className={`screen-cell ${combinedScreenCursor === i && runMode === 'Input' && 'inverted'}`} style={{
               gridColumn: `${(i % MAX_COLS) + 1} / ${(i % MAX_COLS) + 1}`,
               gridRow: `${Math.floor(i / MAX_COLS) + 1} / ${Math.floor(i / MAX_COLS) + 1}`,
             }}>
@@ -205,7 +228,7 @@ function Calculator() {
           ))}
         </div>
       ) : (
-        <div className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
+        <div key="screen" className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
           {[...Array(MAX_COLS).keys()].map(i => {
             const inverted = !!menuTitle.charAt(i)
             return (
