@@ -3,8 +3,6 @@ import HomeScreen, { MAX_COLS, MAX_ROWS } from './tibasic/screen/HomeScreen'
 import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
 import Parser from './tibasic/parser/Parser'
-import BLACKJACK_PRGM from './tibasic/programs/Blackjack'
-import SLOTS_PRGM from './tibasic/programs/Slots'
 
 import './Calculator.css'
 import './fonts/ti-83-plus-large.ttf'
@@ -34,78 +32,10 @@ const SIMPLIFIED_KEY_MAP: { [key: string]: number } = {
   'Digit9': 74,
 }
 
-const PRINT_KEY_PRGM = `
-LBL HOME
-REPEAT Ans
-getKey
-END
-Ans -> K
-OUTPUT(1,1,"YOUR KEY: ")
-OUTPUT(1,11,"   ")
-OUTPUT(1,11,K)
-GOTO HOME
-`
-
-const PAUSE_PRGM = `
-FOR(X,1,10)
-PAUSE X
-END
-`
-
-const TIMER_PRGM = `
-FOR(X,1,10000)
-OUTPUT(1,1,X/1000)
-END
-`
-
-const IF_PRGM = `
-LBL HOME
-REPEAT Ans
-getKey
-END
-Ans -> K
-OUTPUT(1,1,"YOUR KEY: ")
-OUTPUT(1,11,"   ")
-IF K = 24
-THEN
-OUTPUT(1,11,"<--")
-ELSE
-OUTPUT(1,11,K)
-END
-GOTO HOME
-`
-
-const WHILE_PRGM = `
-1 -> X
-WHILE X < 0
-OUTPUT(1,1,"LOOP")
-END
-OUTPUT(2,1,"END")
-`
-
-const MENU_PRGM = `
-Lbl 1
-ClrHome
-Disp "Hello"
-Pause
-Menu("DEAL AGAIN?","YES",1,"LEAVE TABLE",99)
-Lbl 99
-Disp "End Game"
-Pause
-`
-
-const LBL_PRGM = `
-Lbl 1A
-`
-
-const RANDINT_PRGM = `
-Disp randInt(2,11)
-`
-
 type RunMode = 'Run' | 'Pause' | 'Input'
 type ScreenMode = 'Home' | 'Menu'
 
-function Calculator() {
+function Calculator({ programSource }: { programSource: string }) {
   const [debounceKey, setDebounceKey] = useState<string | null>(null)
   const [screenMode, setScreenMode] = useState<ScreenMode>('Home')
   const [screenText, setScreenText] = useState(homeScreen.getChars())
@@ -118,7 +48,7 @@ function Calculator() {
   const [runMode, setRunMode] = useState<RunMode>('Run')
 
   useEffect(() => {
-    const tokens = new Scanner().scan(SLOTS_PRGM)
+    const tokens = new Scanner().scan(programSource)
     const program = new Parser(tokens).parse()
     setInterpreter(new Interpreter(homeScreen, menuScreen, program))
     setScreenText(homeScreen.getChars())
