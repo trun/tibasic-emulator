@@ -106,9 +106,8 @@ function Calculator({ programSource }: { programSource: string }) {
       }
 
       if (runMode === 'Input') {
-        if (e.code.startsWith('Digit')) {
-          const number = parseInt(e.code.substring(5))
-          setScreenInput(screenInput + String(number))
+        if (e.key.length === 1) {
+          setScreenInput(screenInput + e.key)
         }
       }
 

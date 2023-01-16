@@ -1,9 +1,13 @@
-# TI Basic Emulator
-
-Port of https://github.com/JacobMisirian/TiBASIC to Typescript
+# TI-Basic Emulator
 
 ## Running
 
-`yarn start`
+```
+npm run start
+```
 
-Specifying a program to run TBD
+## Credits
+
+Loosely based on...
+- https://github.com/JacobMisirian/TiBASIC
+- https://github.com/davidtorosyan/ti-js
