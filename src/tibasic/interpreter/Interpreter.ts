@@ -19,6 +19,9 @@ import MenuNode from '../parser/MenuNode'
 import IfNode from '../parser/IfNode'
 import PromptNode from '../parser/PromptNode'
 import InputNode from '../parser/InputNode'
+import ElseNode from '../parser/ElseNode'
+import EndNode from '../parser/EndNode'
+import ClrHomeNode from '../parser/ClrHomeNode'
 
 const QUOTED_STRING_RE = /^"([^"]+)"$/
 
@@ -184,155 +187,43 @@ export default class Interpreter {
     switch (node.type) {
       // Labels
       case 'Lbl':
-        return { status: 'run' }
+        return this.visitLbl(node as LblNode)
       case 'Goto':
-        return { status: 'goto', label: (node as GotoNode).label }
+        return this.visitGoto(node as GotoNode)
 
       // Control Flow
       case 'Repeat':
-        this.blockStack.push(this.position)
-        return { status: 'run' }
+        return this.visitRepeat(node as RepeatNode)
       case 'While':
-        const whileNode = node as WhileNode
-        this.blockStack.push(this.position)
-        if (Boolean(this.evaluateNode(whileNode.predicate))) {
-          return { status: 'run' }
-        } else {
-          this.skippedBlockHeight = this.blockStack.length
-          return { status: 'run' }
-        }
+        return this.visitWhile(node as WhileNode)
       case 'For':
-        const forNode = node as ForNode
-        const variable = new IdentifierNode(forNode.variable)
-        const startValue = new NumberNode(Number(this.evaluateNode(forNode.start)))
-        if (!(this.position in this.forLoopInitialization)) {
-          this.forLoopInitialization[this.position] = true
-          this.evaluateNode(new BinaryOpNode(BinaryOp.Assignment, startValue, variable))
-        }
-        this.blockStack.push(this.position)
-        return { status: 'run' }
+        return this.visitFor(node as ForNode)
       case 'If':
-        const ifNode = node as IfNode
-        const predicate = Boolean(this.evaluateNode(ifNode.predicate))
-
-        // if-then-else
-        if (this.lines[this.position + 1].type === 'Then') {
-          this.blockStack.push(this.position)
-          this.ifElsePredicates[this.position] = predicate
-          this.position += 1 // skip the 'Then' line
-          if (predicate) {
-            return { status: 'run' }
-          } else {
-            this.skippedBlockHeight = this.blockStack.length
-            return { status: 'run' }
-          }
-        }
-        // if
-        else {
-          if (predicate) {
-            return { status: 'run' }
-          } else {
-            this.position += 1 // skip next line
-            return { status: 'run' }
-          }
-        }
+        return this.visitIf(node as IfNode)
       case 'Else':
-        const ifBlockPosition: number = this.blockStack.pop() as number
-        this.blockStack.push(this.position)
-        if (this.ifElsePredicates[ifBlockPosition]) {
-          this.skippedBlockHeight = this.blockStack.length
-        }
-        delete this.ifElsePredicates[ifBlockPosition]
-        return { status: 'run' }
+        return this.visitElse(node as ElseNode)
       case 'Then':
         return { status: 'run' } // skip
-
       case 'End':
-        const lastBlockPosition: number = this.blockStack.pop() as number
-        const lastNode: ASTNode = this.lines[lastBlockPosition]
-
-        if (lastNode.type === 'Repeat') {
-          const repeatNode = lastNode as RepeatNode
-          if (Boolean(this.evaluateNode(repeatNode.predicate))) {
-            return { status: 'run' }
-          } else {
-            return { status: 'jump', position: lastBlockPosition }
-          }
-        } else if (lastNode.type === 'While') {
-          return { status: 'jump', position: lastBlockPosition }
-        } else if (lastNode.type === 'For') {
-          const forNode = lastNode as ForNode
-          const variable = new IdentifierNode(forNode.variable)
-          const endValue = new NumberNode(Number(this.evaluateNode(forNode.end)))
-          const stepValue = new NumberNode(Number(this.evaluateNode(forNode.step)))
-          const predicate = new BinaryOpNode(BinaryOp.LessThanOrEqual, variable, endValue)
-          if (Boolean(this.evaluateNode(predicate))) {
-            const nextValue = new BinaryOpNode(BinaryOp.Addition, variable, stepValue)
-            this.evaluateNode(new BinaryOpNode(BinaryOp.Assignment, nextValue, variable))
-            return { status: 'jump', position: lastBlockPosition }
-          } else {
-            delete this.forLoopInitialization[this.position]
-            return { status: 'run' }
-          }
-        } else if (lastNode.type === 'Else' || lastNode.type === 'If') {
-          return { status: 'run' }
-        } else {
-          return { status: 'error', message: `Reached END for unimplemented block node: ${lastNode.type}` }
-        }
+        return this.visitEnd(node as EndNode)
 
       // Screen
       case 'Disp':
-        const dispNode = node as DispNode
-        dispNode.args.arglist.forEach(argNode => {
-          this.homeScreen.display(this.evaluateNode(argNode))
-        })
-        return { status: 'run' }
+        return this.visitDisp(node as DispNode)
       case 'Output':
-        const outputNode = node as OutputNode
-        const body = this.evaluateNode(outputNode.expression)
-        this.homeScreen.output(outputNode.row, outputNode.col, body)
-        return { status: 'run' }
-      case 'Input':
-        const inputArgs = (node as InputNode).args
-
-        let prompt: string
-        let identifier: string
-        if (inputArgs.arglist.length === 2) {
-          prompt = String(this.evaluateNode(inputArgs.arglist[0]))
-          identifier = (inputArgs.arglist[1] as IdentifierNode).identifier
-        } else {
-          prompt = '?'
-          identifier = (inputArgs.arglist[0] as IdentifierNode).identifier
-        }
-
-        this.homeScreen.display(prompt)
-        const callback = (value: string) => {
-          value = value || '0' // FIXME default to 0 for simplicity
-          if (QUOTED_STRING_RE.test(value)) {
-            this.variables[identifier] = QUOTED_STRING_RE.exec(value)![1]
-          } else {
-            this.variables[identifier] = parseFloat(value)
-          }
-        }
-
-        return { status: 'input', callback }
+        return this.visitOutput(node as OutputNode)
       case 'ClrHome':
-        this.homeScreen.clear()
-        return { status: 'run' }
+        return this.visitClrHome(node as ClrHomeNode)
       case 'Menu':
-        const menuNode = node as MenuNode
-        const title = String(this.evaluateNode(menuNode.title))
-        const labels = menuNode.options.map(option => String(this.evaluateNode(option.option)))
-        this.menuScreen.setTitleAndOptions(title, labels)
-        return { status: 'menu' }
+        return this.visitMenu(node as MenuNode)
 
       // I/O
       case 'Pause':
-        const pauseNode = node as PauseNode
-        if (pauseNode.args.arglist.length > 0) {
-          this.homeScreen.display(this.evaluateNode(pauseNode.args.arglist[0]))
-        }
-        return { status: 'pause' }
+        return this.visitPause(node as PauseNode)
+      case 'Prompt':
+        return this.visitPrompt(node as PromptNode)
+      case 'Input':
+        return this.visitInput(node as InputNode)
 
       // Expressions
       case 'Number':
@@ -340,11 +231,186 @@ export default class Interpreter {
       case 'Identifier':
       case 'BinaryOp':
       case 'FunctionCall':
-        const result = this.evaluateNode(node)
-        this.variables['Ans'] = result
-        return { status: 'run' }
+        return this.visitExpression(node)
       default:
         return { status: 'error', message: `Unexpected AST node type: ${node.type}` }
+    }
+  }
+
+  private visitLbl(node: LblNode): RunResult {
+    return { status: 'run' }
+  }
+
+  private visitGoto(node: GotoNode): RunResult {
+    return { status: 'goto', label: node.label }
+  }
+
+  private visitRepeat(node: RepeatNode): RunResult {
+    this.blockStack.push(this.position)
+    return { status: 'run' }
+  }
+
+  private visitWhile(node: WhileNode): RunResult {
+    this.blockStack.push(this.position)
+    if (Boolean(this.evaluateNode(node.predicate))) {
+      return { status: 'run' }
+    } else {
+      this.skippedBlockHeight = this.blockStack.length
+      return { status: 'run' }
+    }
+  }
+
+  private visitFor(node: ForNode): RunResult {
+    const variable = new IdentifierNode(node.variable)
+    const startValue = new NumberNode(Number(this.evaluateNode(node.start)))
+    if (!(this.position in this.forLoopInitialization)) {
+      this.forLoopInitialization[this.position] = true
+      this.evaluateNode(new BinaryOpNode(BinaryOp.Assignment, startValue, variable))
+    }
+    this.blockStack.push(this.position)
+    return { status: 'run' }
+  }
+
+  private visitIf(node: IfNode): RunResult {
+    const predicate = Boolean(this.evaluateNode(node.predicate))
+
+    // if-then-else
+    if (this.lines[this.position + 1].type === 'Then') {
+      this.blockStack.push(this.position)
+      this.ifElsePredicates[this.position] = predicate
+      this.position += 1 // skip the 'Then' line
+      if (predicate) {
+        return { status: 'run' }
+      } else {
+        this.skippedBlockHeight = this.blockStack.length
+        return { status: 'run' }
+      }
+    }
+    // if
+    else {
+      if (predicate) {
+        return { status: 'run' }
+      } else {
+        this.position += 1 // skip next line
+        return { status: 'run' }
+      }
+    }
+  }
+
+  private visitElse(node: ElseNode): RunResult {
+    const ifBlockPosition: number = this.blockStack.pop() as number
+    this.blockStack.push(this.position)
+    if (this.ifElsePredicates[ifBlockPosition]) {
+      this.skippedBlockHeight = this.blockStack.length
+    }
+    delete this.ifElsePredicates[ifBlockPosition]
+    return { status: 'run' }
+  }
+
+  private visitEnd(node: EndNode): RunResult {
+    const lastBlockPosition: number = this.blockStack.pop() as number
+    const lastNode: ASTNode = this.lines[lastBlockPosition]
+
+    if (lastNode.type === 'Repeat') {
+      const repeatNode = lastNode as RepeatNode
+      if (Boolean(this.evaluateNode(repeatNode.predicate))) {
+        return { status: 'run' }
+      } else {
+        return { status: 'jump', position: lastBlockPosition }
+      }
+    } else if (lastNode.type === 'While') {
+      return { status: 'jump', position: lastBlockPosition }
+    } else if (lastNode.type === 'For') {
+      const forNode = lastNode as ForNode
+      const variable = new IdentifierNode(forNode.variable)
+      const endValue = new NumberNode(Number(this.evaluateNode(forNode.end)))
+      const stepValue = new NumberNode(Number(this.evaluateNode(forNode.step)))
+      const predicate = new BinaryOpNode(BinaryOp.LessThanOrEqual, variable, endValue)
+      if (Boolean(this.evaluateNode(predicate))) {
+        const nextValue = new BinaryOpNode(BinaryOp.Addition, variable, stepValue)
+        this.evaluateNode(new BinaryOpNode(BinaryOp.Assignment, nextValue, variable))
+        return { status: 'jump', position: lastBlockPosition }
+      } else {
+        delete this.forLoopInitialization[this.position]
+        return { status: 'run' }
+      }
+    } else if (lastNode.type === 'Else' || lastNode.type === 'If') {
+      return { status: 'run' }
+    } else {
+      return { status: 'error', message: `Reached END for unimplemented block node: ${lastNode.type}` }
+    }
+  }
+
+  private visitDisp = (node: DispNode): RunResult => {
+    node.args.arglist.forEach(argNode => {
+      this.homeScreen.display(this.evaluateNode(argNode))
+    })
+    return { status: 'run' }
+  }
+
+  private visitOutput = (node: OutputNode): RunResult => {
+    const body = this.evaluateNode(node.expression)
+    this.homeScreen.output(node.row, node.col, body)
+    return { status: 'run' }
+  }
+
+  private visitPrompt = (node: PromptNode): RunResult => {
+    const promptArgs = node.variables
+    const identifier: string = (promptArgs.arglist[0] as IdentifierNode).identifier
+    const prompt: string = `${identifier}=?`
+    this.homeScreen.display(prompt)
+    return { status: 'input', callback: this.makeParseInputCallback(identifier) }
+  }
+
+  private visitInput = (node: InputNode): RunResult => {
+    const inputArgs = node.args
+
+    let prompt: string
+    let identifier: string
+    if (inputArgs.arglist.length === 2) {
+      prompt = String(this.evaluateNode(inputArgs.arglist[0]))
+      identifier = (inputArgs.arglist[1] as IdentifierNode).identifier
+    } else {
+      prompt = '?'
+      identifier = (inputArgs.arglist[0] as IdentifierNode).identifier
+    }
+
+    this.homeScreen.display(prompt)
+    return { status: 'input', callback: this.makeParseInputCallback(identifier) }
+  }
+
+  private visitClrHome = (node: ClrHomeNode): RunResult => {
+    this.homeScreen.clear()
+    return { status: 'run' }
+  }
+
+  private visitMenu = (node: MenuNode): RunResult => {
+    const title = String(this.evaluateNode(node.title))
+    const labels = node.options.map(option => String(this.evaluateNode(option.option)))
+    this.menuScreen.setTitleAndOptions(title, labels)
+    return { status: 'menu' }
+  }
+
+  private visitPause = (node: PauseNode): RunResult => {
+    if (node.args.arglist.length > 0) {
+      this.homeScreen.display(this.evaluateNode(node.args.arglist[0]))
+    }
+    return { status: 'pause' }
+  }
+
+  private visitExpression = (node: ASTNode): RunResult => {
+    this.variables['Ans'] = this.evaluateNode(node)
+    return { status: 'run' }
+  }
+
+  private makeParseInputCallback = (identifier: string) => {
+    return (value: string) => {
+      value = value || '0' // FIXME default to 0 for simplicity
+      if (QUOTED_STRING_RE.test(value)) {
+        this.variables[identifier] = QUOTED_STRING_RE.exec(value)![1]
+      } else {
+        this.variables[identifier] = parseFloat(value)
+      }
     }
   }
 
