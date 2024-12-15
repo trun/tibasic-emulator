@@ -15,19 +15,19 @@ Goto A
 `
 
 const PROGRAMS: { [name: string]: string } = {
-  'Blackjack': BLACKJACK_PRGM,
   'Slots': SLOTS_PRGM,
+  'Blackjack': BLACKJACK_PRGM,
   'Demo': DEMO_PRGM,
 }
 
 const HINTS: { [name: string]: string } = {
-  'Blackjack': 'Press Enter to continue...',
   'Slots': 'Press Enter to continue...',
+  'Blackjack': 'Press Enter to continue...',
   'Demo': 'Press any TI83 key to see the key code...',
 }
 
 function App() {
-  const [program, setProgram] = useState('Blackjack')
+  const [program, setProgram] = useState('Slots')
 
   return (
     <div className="App">
