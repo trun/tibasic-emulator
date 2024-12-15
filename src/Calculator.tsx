@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import HomeScreen, { MAX_COLS, MAX_ROWS } from './tibasic/screen/HomeScreen'
 import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
@@ -7,9 +7,6 @@ import Parser from './tibasic/parser/Parser'
 import './Calculator.css'
 import './fonts/ti-83-plus-large.ttf'
 import MenuScreen from './tibasic/screen/MenuScreen'
-
-const homeScreen = new HomeScreen()
-const menuScreen = new MenuScreen()
 
 // TI-83 clock speed is 1000 Hz
 const TICK_SPEED_MS = 1
@@ -36,6 +33,9 @@ type RunMode = 'Run' | 'Pause' | 'Input'
 type ScreenMode = 'Home' | 'Menu'
 
 function Calculator({ programSource }: { programSource: string }) {
+  const homeScreen = useMemo(() => new HomeScreen(), [])
+  const menuScreen = useMemo(() => new MenuScreen(), [])
+
   const [debounceKey, setDebounceKey] = useState<string | null>(null)
   const [screenMode, setScreenMode] = useState<ScreenMode>('Home')
   const [screenText, setScreenText] = useState(homeScreen.getChars())
@@ -46,6 +46,13 @@ function Calculator({ programSource }: { programSource: string }) {
   const [menuCurrentIndex, setMenuCurrentIndex] = useState(menuScreen.getCurrentIndex())
   const [interpreter, setInterpreter] = useState<Interpreter>()
   const [runMode, setRunMode] = useState<RunMode>('Run')
+  const calculatorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (calculatorRef.current !== null) {
+      calculatorRef.current.focus()
+    }
+  }, []);
 
   useEffect(() => {
     const tokens = new Scanner().scan(programSource)
@@ -55,7 +62,7 @@ function Calculator({ programSource }: { programSource: string }) {
     setScreenCursor(homeScreen.getCursor())
     setMenuTitle(menuScreen.getTitle())
     setMenuLabels(menuScreen.getLabels())
-  }, [])
+  }, [homeScreen, menuScreen, programSource])
 
   useEffect(() => {
     if (!interpreter) {
@@ -81,7 +88,7 @@ function Calculator({ programSource }: { programSource: string }) {
       setMenuCurrentIndex(menuScreen.getCurrentIndex())
     }, TICK_SPEED_MS)
     return () => clearInterval(interval);
-  }, [interpreter, runMode])
+  }, [homeScreen, interpreter, menuScreen, runMode])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.code === debounceKey) {
@@ -146,7 +153,7 @@ function Calculator({ programSource }: { programSource: string }) {
   return (
     <div className="calculator">
       {screenMode === 'Home' ? (
-        <div key="screen" className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
+        <div ref={calculatorRef} key="screen" className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
           {combinedScreenText.split('').map((char, i) => (
             <div key={i} className={`screen-cell ${combinedScreenCursor === i && runMode === 'Input' && 'inverted'}`} style={{
               gridColumn: `${(i % MAX_COLS) + 1} / ${(i % MAX_COLS) + 1}`,
@@ -157,7 +164,7 @@ function Calculator({ programSource }: { programSource: string }) {
           ))}
         </div>
       ) : (
-        <div key="screen" className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
+        <div ref={calculatorRef} key="screen" className="screen" onKeyPress={handleKeyPress} onKeyUp={handleKeyUp} onKeyDown={handleKeyDown} tabIndex={0}>
           {[...Array(MAX_COLS).keys()].map(i => {
             const inverted = !!menuTitle.charAt(i)
             return (

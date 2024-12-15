@@ -1,7 +1,6 @@
 const PROGRAM: string = `
 ClrHome
 Output(4,3,"WELCOME TO..."
-Pause 
 Output(8,1,"HIGHSCORE:"
 Output(8,11,theta)
 Output(5,2,"TR'S BLACKJACK"
@@ -30,21 +29,21 @@ Output(1,12,S)
 Pause 
 If S<=0
 Then
-\tOutput(4,4,"SORRY MAN."
-\tOutput(5,3,"YOU'RE BROKE."
-\tPause 
-\tGoto 99
+     Output(4,4,"SORRY MAN."
+     Output(5,3,"YOU'RE BROKE."
+     Pause 
+     Goto 99
 End
 Goto 22
 Lbl DC
 ClrHome
 If S<=0
 Then
-\tOutput(4,3,"THIS TABLE IS"
-\tOutput(5,2,"FOR PEOPLE WHO"
-\tOutput(6,4,"HAVE MONEY."
-\tPause 
-\tGoto 99
+     Output(4,3,"THIS TABLE IS"
+     Output(5,2,"FOR PEOPLE WHO"
+     Output(6,4,"HAVE MONEY."
+     Pause 
+     Goto 99
 End
 Disp "BET HOW MUCH?   "
 Input R
@@ -91,66 +90,66 @@ ClrHome
 Output(1,2,"1ST CARD:"
 If A=11
 Then
-\tOutput(1,11,"A"
+     Output(1,11,"A"
 Else
-\tOutput(1,11,A)
+     Output(1,11,A)
 End
 Pause 
 Output(2,2,"2ND CARD:"
 If B=11
 Then
-\tOutput(2,11,"A"
+     Output(2,11,"A"
 Else
-\tOutput(2,11,B)
+     Output(2,11,B)
 End
 Pause 
 If A=11
 Then
-\tMenu("YOU HAVE AN ACE","SCORE AS 1",A1,"SCORE AS 11",A2)
+     Menu("YOU HAVE AN ACE","SCORE AS 1",A1,"SCORE AS 11",A2)
 Else
-\tGoto 1B
-\tLbl A1
-\t1->A
-\tGoto 1T
-\tLbl A2
-\t11->A
-\tGoto 1T
-\tLbl 1B
-\tIf B=11
-\tThen
-\t\tMenu("YOU HAVE AN ACE","SCORE AS 1",B1,"SCORE AS 11",B2)
-\tElse
-\t\tGoto 1T
-\tEnd
-\tLbl B1
-\t1->B
-\tGoto 1T
-\tLbl B2
-\t11->B
-\tGoto 1T
-\tLbl 1T
-\tA+B->T
-\tOutput(8,2,"TOTAL:")
-\tOutput(8,9,T)
-\tPause 
-\tMenu("HIT?","YES",A,"STAY",theta)
+     Goto 1B
+     Lbl A1
+     1->A
+     Goto 1T
+     Lbl A2
+     11->A
+     Goto 1T
+     Lbl 1B
+     If B=11
+     Then
+          Menu("YOU HAVE AN ACE","SCORE AS 1",B1,"SCORE AS 11",B2)
+     Else
+          Goto 1T
+     End
+     Lbl B1
+     1->B
+     Goto 1T
+     Lbl B2
+     11->B
+     Goto 1T
+     Lbl 1T
+     A+B->T
+     Output(8,2,"TOTAL:")
+     Output(8,9,T)
+     Pause 
+     Menu("HIT?","YES",A,"STAY",theta)
 End
 Lbl A
 randInt(2,11)->C
 Output(3,2,"3RD CARD:"
 If C=11
 Then
-\tOutput(3,11,"A"
+     Output(3,11,"A"
 Else
-\tOutput(3,11,C)
+     Output(3,11,C)
 End
 Output(8,2,"              "
 Pause 
 If C=11
 Then
-\tMenu("YOU HAVE AN ACE","SCORE AS 1",C1,"SCORE AS 11",C2)
+     Menu("YOU HAVE AN ACE","SCORE AS 1",C1,"SCORE AS 11",C2)
 Else
-\tGoto 2T
+     Goto 2T
 End
 Lbl C1
 1->C
@@ -170,17 +169,17 @@ randInt(2,11)->D
 Output(4,2,"4TH CARD:"
 If D=11
 Then
-\tOutput(4,11,"A"
+     Output(4,11,"A"
 Else
-\tOutput(4,11,D)
+     Output(4,11,D)
 End
 Output(8,2,"              "
 Pause 
 If D=11
 Then
-\tMenu("YOU HAVE AN ACE","SCORE AS 1",D1,"SCORE AS 11",D2)
+     Menu("YOU HAVE AN ACE","SCORE AS 1",D1,"SCORE AS 11",D2)
 Else
-\tGoto 3T
+     Goto 3T
 End
 Lbl D1
 1->D
@@ -199,17 +198,17 @@ randInt(2,11)->E
 Output(5,2,"5TH CARD:"
 If E=11
 Then
-\tOutput(5,11,"A"
+     Output(5,11,"A"
 Else
-\tOutput(5,11,E)
+     Output(5,11,E)
 End
 Output(8,2,"              "
 Pause 
 If E=11
 Then
-\tMenu("YOU HAVE AN ACE","SCORE AS 1",E1,"SCORE AS 11",E2)
+     Menu("YOU HAVE AN ACE","SCORE AS 1",E1,"SCORE AS 11",E2)
 Else
-\tGoto 4T
+     Goto 4T
 End
 Lbl E1
 1->E
@@ -241,16 +240,16 @@ If Y=11 and X=11
 Output(1,2,"1ST CARD:"
 If Y=11
 Then
-\tOutput(1,11,"A"
+     Output(1,11,"A"
 Else
-\tOutput(1,11,Y)
+     Output(1,11,Y)
 End
 Output(2,2,"2ND CARD:"
 If X=11
 Then
-\tOutput(2,11,"A"
+     Output(2,11,"A"
 Else
-\tOutput(2,11,X)
+     Output(2,11,X)
 End
 Pause 
 Y+X->Z
@@ -270,16 +269,16 @@ randInt(1,11)->W
 Output(3,2,"3RD CARD:"
 If W=11
 Then
-\tOutput(3,11,"A"
+     Output(3,11,"A"
 Else
-\tOutput(3,11,W)
+     Output(3,11,W)
 End
 Output(7,2,"               "
 Pause 
 If W=11
 Then
-\tW+Z->P
-\tGoto 1P
+     W+Z->P
+     Goto 1P
 End
 Goto 1Z
 Lbl 1P
@@ -303,18 +302,18 @@ randInt(1,11)->V
 Output(4,2,"4TH CARD:"
 If V=11
 Then
-\tOutput(4,11,"A"
+     Output(4,11,"A"
 Else
-\tOutput(4,11,V)
+     Output(4,11,V)
 End
 Output(7,2,"              "
 Pause 
 If V=11
 Then
-\tV+Z->P
-\tGoto 2P
+     V+Z->P
+     Goto 2P
 Else
-\tGoto 2Z
+     Goto 2Z
 End
 Lbl 2P
 If P>21
@@ -338,18 +337,18 @@ randInt(1,11)->U
 Output(5,2,"5TH CARD:"
 If U=11
 Then
-\tOutput(5,11,"A"
+     Output(5,11,"A"
 Else
-\tOutput(5,11,U)
+     Output(5,11,U)
 End
 Output(7,2,"              "
 Pause 
 If U=11
 Then
-\tU+Z->P
-\tGoto 3P
+     U+Z->P
+     Goto 3P
 Else
-\tGoto 3Z
+     Goto 3Z
 End
 Lbl 3P
 If P>21
@@ -426,9 +425,9 @@ Output(4,11,S)
 Pause 
 If S>theta
 Then
-\tS->theta
-\tOutput(7,2,"HIGHSCORE!"
-\tPause 
+     S->theta
+     Output(7,2,"HIGHSCORE!"
+     Pause 
 End
 prgmCASINO
 Lbl SM

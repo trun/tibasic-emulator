@@ -3,9 +3,7 @@ const PROGRAM = `
 300->J
 ClrHome
 Output(4,3,"WELCOME TO..."
-Pause 
 Output(5,4,"TR'S SLOTS"
-Pause 
 Output(8,1,"HIGHSCORE:"
 Output(8,12,Q)
 Pause 
@@ -66,144 +64,144 @@ If I=G or I=H
 Goto 16
 If X=1
 Then
-\tClrHome
-\tOutput(1,1,"JACKPOT: ")
-\tOutput(1,10,J
-\tOutput(5,1,"*")
-\tPause 
+     ClrHome
+     Output(1,1,"JACKPOT: ")
+     Output(1,10,J
+     Output(5,1,"*")
+     Pause 
 End
 If X=2
 Then
-\tClrHome
-\tOutput(1,1,"JACKPOT: "
-\tOutput(1,10,J
-\tOutput(5,1,"*"
-\t
-\tOutput(3,1,"*"
-\tOutput(7,1,"*"
-\tPause 
+     ClrHome
+     Output(1,1,"JACKPOT: "
+     Output(1,10,J
+     Output(5,1,"*"
+     
+     Output(3,1,"*"
+     Output(7,1,"*"
+     Pause 
 End
 If X=3
 Then
-\tClrHome
-\tOutput(1,1,"JACKPOT: "
-\tOutput(1,10,J
-\tOutput(5,1,"*"
-\t
-\tOutput(3,1,"*"
-\tOutput(7,1,"*"
-\t
-\tOutput(2,1,"*"
-\tOutput(8,1,"*"
-\tPause 
+     ClrHome
+     Output(1,1,"JACKPOT: "
+     Output(1,10,J
+     Output(5,1,"*"
+     
+     Output(3,1,"*"
+     Output(7,1,"*"
+     
+     Output(2,1,"*"
+     Output(8,1,"*"
+     Pause 
 End
 If A=1
 Then
-\tOutput(3,3,"="
-\tGoto SB
+     Output(3,3,"="
+     Goto SB
 End
 If A=8
 Then
-\tOutput(3,3,"W"
-\tGoto SB
+     Output(3,3,"W"
+     Goto SB
 End
 Output(3,3,A)
 Lbl SB
 If B=1
 Then
-\tOutput(5,3,"="
-\tGoto SC
+     Output(5,3,"="
+     Goto SC
 End
 If B=8
 Then
-\tOutput(5,3,"W"
-\tGoto SC
+     Output(5,3,"W"
+     Goto SC
 End
 Output(5,3,B)
 Lbl SC
 If C=1
 Then
-\tOutput(7,3,"="
-\tGoto SD
+     Output(7,3,"="
+     Goto SD
 End
 If C=8
 Then
-\tOutput(7,3,"W"
-\tGoto SD
+     Output(7,3,"W"
+     Goto SD
 End
 Output(7,3,C)
 Lbl SD
 Pause 
 If D=1
 Then
-\tOutput(3,6,"="
-\tGoto SE
+     Output(3,6,"="
+     Goto SE
 End
 If D=8
 Then
-\tOutput(3,6,"W"
-\tGoto SE
+     Output(3,6,"W"
+     Goto SE
 End
 Output(3,6,D)
 Lbl SE
 If E=1
 Then
-\tOutput(5,6,"="
-\tGoto SF
+     Output(5,6,"="
+     Goto SF
 End
 If E=8
 Then
-\tOutput(5,6,"W"
-\tGoto SF
+     Output(5,6,"W"
+     Goto SF
 End
 Output(5,6,E)
 Lbl SF
 If F=1
 Then
-\tOutput(7,6,"="
-\tGoto SG
+     Output(7,6,"="
+     Goto SG
 End
 If F=8
 Then
-\tOutput(7,6,"W"
-\tGoto SG
+     Output(7,6,"W"
+     Goto SG
 End
 Output(7,6,F)
 Lbl SG
 Pause 
 If G=1
 Then
-\tOutput(3,9,"="
-\tGoto SH
+     Output(3,9,"="
+     Goto SH
 End
 If G=8
 Then
-\tOutput(3,9,"W"
-\tGoto SH
+     Output(3,9,"W"
+     Goto SH
 End
 Output(3,9,G)
 Lbl SH
 If H=1
 Then
-\tOutput(5,9,"="
-\tGoto SI
+     Output(5,9,"="
+     Goto SI
 End
 If H=8
 Then
-\tOutput(5,9,"W"
-\tGoto SI
+     Output(5,9,"W"
+     Goto SI
 End
 Output(5,9,H)
 Lbl SI
 If I=1
 Then
-\tOutput(7,9,"="
-\tGoto LO
+     Output(7,9,"="
+     Goto LO
 End
 If I=8
 Then
-\tOutput(7,9,"W"
-\tGoto LO
+     Output(7,9,"W"
+     Goto LO
 End
 Output(7,9,I)
 Lbl LO
@@ -309,10 +307,10 @@ Pause
 Lbl HS
 If M>Q
 Then
-\tM->Q
-\tClrHome
-\tOutput(4,3,"!HIGH SCORE!"
-\tPause 
+     M->Q
+     ClrHome
+     Output(4,3,"!HIGH SCORE!"
+     Pause 
 End
 Goto PA
 Lbl NE
@@ -330,16 +328,16 @@ Pause
 If M>Q
 M->Q
 Lbl WC
-\tClrHome
-\tOutput(1,1,"-WINNING COMBOS-"
-\tOutput(3,2,"777"
-\tOutput(3,8,J
-\tOutput(5,2,"==="
-\tOutput(5,8,"150"
-\tOutput(7,2,"ANY3"
-\tOutput(7,8,"50"
-\tPause 
-\tGoto 1
+     ClrHome
+     Output(1,1,"-WINNING COMBOS-"
+     Output(3,2,"777"
+     Output(3,8,J
+     Output(5,2,"==="
+     Output(5,8,"150"
+     Output(7,2,"ANY3"
+     Output(7,8,"50"
+     Pause 
+     Goto 1
 End
 Lbl TB
 M+150->M
