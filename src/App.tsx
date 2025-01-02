@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css'
 import Calculator from './Calculator'
 import BLACKJACK_PRGM from './programs/Blackjack'
@@ -27,24 +27,43 @@ const HINTS: { [name: string]: string } = {
 }
 
 function App() {
+  const [ready, setReady] = useState(false)
   const [program, setProgram] = useState('Slots')
+  const [showOptions, setShowOptions] = useState(true)
+
+  useEffect(() => {
+    if (window.location.search) {
+      const params = new URLSearchParams(window.location.search)
+      if (params.has('program') && params.get('program')! in PROGRAMS) {
+        setProgram(params.get('program')!)
+        setShowOptions(false)
+      }
+    }
+    setReady(true)
+  }, [])
+
+  if (!ready) {
+    return <div />
+  }
 
   return (
     <div className="App">
       <Calculator key={program} programSource={PROGRAMS[program]} />
-      <div style={{
-        display: 'flex',
-        flexDirection: 'row',
-        marginLeft: '10px',
-      }}>
-        <pre style={{ marginRight: '5px' }}>Program:</pre>
-        <select value={program} onChange={(e) => setProgram(e.currentTarget.value)}>
-          {Object.entries(PROGRAMS).map(([key, value]) => (
-            <option key={key} value={key}>{key}</option>
-          ))}
-        </select>
-        <pre style={{ marginLeft: '10px' }}>{HINTS[program]}</pre>
-      </div>
+      {showOptions && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'row',
+          marginLeft: '10px',
+        }}>
+          <pre style={{marginRight: '5px'}}>Program:</pre>
+          <select value={program} onChange={(e) => setProgram(e.currentTarget.value)}>
+            {Object.entries(PROGRAMS).map(([key, value]) => (
+              <option key={key} value={key}>{key}</option>
+            ))}
+          </select>
+          <pre style={{marginLeft: '10px'}}>{HINTS[program]}</pre>
+        </div>
+      )}
     </div>
   )
 }

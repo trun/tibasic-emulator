@@ -1,18 +1,17 @@
 @font-face {
   font-family: "ti-83-plus-large";
-  src: local("ti-83-plus-large"),
-  url("./fonts/ti-83-plus-large.ttf") format("truetype");
+  src: local("ti-83-plus-large"), url("./fonts/ti-83-plus-large.ttf") format("truetype");
 }
 
 .calculator {
   margin: 10px;
+  width: 420px;
+  height: 276px;
 }
 
 .screen {
   display: grid;
   gap: 0;
-  width: calc(16 * 26px);
-  margin-bottom: 10px;
   border: 2px solid #999;
   box-shadow: 2px 2px 2px #999;
 }
@@ -32,18 +31,4 @@
 .screen-cell.inverted {
   background-color: #333;
   color: white;
-}
-
-.repl {
-  display: flex;
-  width: calc(16 * 26px + 8px);
-  font-family: monospace;
-  font-weight: 500;
-  font-size: 24px;
-  background-color: #fafafa;
-}
-
-.repl input {
-  flex: 1;
-  margin-right: 10px;
 }

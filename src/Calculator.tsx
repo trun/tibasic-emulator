@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import HomeScreen, { MAX_COLS, MAX_ROWS } from './tibasic/screen/HomeScreen'
+import MenuScreen from './tibasic/screen/MenuScreen'
 import Interpreter from './tibasic/interpreter/Interpreter'
 import Scanner from './tibasic/lexer/scanner'
 import Parser from './tibasic/parser/Parser'
 
 import './Calculator.css'
 import './fonts/ti-83-plus-large.ttf'
-import MenuScreen from './tibasic/screen/MenuScreen'
 
 // TI-83 clock speed is 1000 Hz
 const TICK_SPEED_MS = 1
