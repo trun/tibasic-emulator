@@ -1,7 +1,7 @@
 {
   "name": "tibasic-emulator",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "homepage": "https://trun.github.io/tibasic-emulator",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
