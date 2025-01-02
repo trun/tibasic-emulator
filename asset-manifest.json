@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/tibasic-emulator/static/css/main.b47765c7.css",
+    "main.js": "/tibasic-emulator/static/js/main.9cabd9a8.js",
+    "static/js/488.d310868e.chunk.js": "/tibasic-emulator/static/js/488.d310868e.chunk.js",
+    "static/media/ti-83-plus-large.ttf": "/tibasic-emulator/static/media/ti-83-plus-large.bf4d7df3ad90d3724d28.ttf",
+    "index.html": "/tibasic-emulator/index.html",
+    "main.b47765c7.css.map": "/tibasic-emulator/static/css/main.b47765c7.css.map",
+    "main.9cabd9a8.js.map": "/tibasic-emulator/static/js/main.9cabd9a8.js.map",
+    "488.d310868e.chunk.js.map": "/tibasic-emulator/static/js/488.d310868e.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b47765c7.css",
+    "static/js/main.9cabd9a8.js"
+  ]
+}
