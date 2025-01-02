@@ -12,6 +12,7 @@
 .screen {
   display: grid;
   gap: 0;
+  width: calc(16 * 26px);
   border: 2px solid #999;
   box-shadow: 2px 2px 2px #999;
 }
