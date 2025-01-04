@@ -153,7 +153,6 @@ function Calculator({ programSource }: { programSource: string }) {
       }
 
       if (runMode !== 'Run' && e.code === 'Enter') {
-        console.log('Setting mode to run...')
         interpreter?.setInput(screenInput)
         setScreenInput('')
         setRunMode('Run')
