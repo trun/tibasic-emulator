@@ -27,6 +27,17 @@ const SIMPLIFIED_KEY_MAP: { [key: string]: number } = {
   'Digit7': 72,
   'Digit8': 73,
   'Digit9': 74,
+  'NumpadEnter': 105,
+  'Numpad0': 102,
+  'Numpad1': 92,
+  'Numpad2': 93,
+  'Numpad3': 94,
+  'Numpad4': 82,
+  'Numpad5': 83,
+  'Numpad6': 84,
+  'Numpad7': 72,
+  'Numpad8': 73,
+  'Numpad9': 74,
 }
 
 type RunMode = 'Run' | 'Pause' | 'Input'
@@ -101,7 +112,13 @@ function Calculator({ programSource }: { programSource: string }) {
       if (e.code === 'Enter') {
         setRunMode('Run')
       } else if (e.code.startsWith('Digit')) {
-        const index = parseInt(e.code.substring(5)) - 1
+        const index = parseInt(e.code.substring('Digit'.length)) - 1
+        if (index < menuScreen.getLabels().length) {
+          menuScreen.setCurrentIndex(index)
+          setRunMode('Run')
+        }
+      } else if (e.code.startsWith('Numpad') && Number.isInteger(parseInt(e.code.substring('Numpad'.length)))) {
+        const index = parseInt(e.code.substring('Numpad'.length)) - 1
         if (index < menuScreen.getLabels().length) {
           menuScreen.setCurrentIndex(index)
           setRunMode('Run')
